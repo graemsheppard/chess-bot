@@ -1,0 +1,9 @@
+discord:
+  application:
+    client_id: 1078875098909507655
+    client_secret: 1EevC9yofRmUJi5y5ghurg_-qRNnuEN7
+    public_key: 251bb162d8ff28d89b4090466914b6c41b74d7ee7487ec7b3852b7d389c53911
+  bot:
+    #permission: 395137099840
+    permission: 395137116224
+    token: MTA3ODg3NTA5ODkwOTUwNzY1NQ.GVCGC3.b_2XHVVNzODzFI6EIunQnP7JZXfVZGyh0fTf0E
