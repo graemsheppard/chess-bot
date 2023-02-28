@@ -46,4 +46,5 @@ public abstract class Piece {
     public abstract List<Location> getAttackingTiles(Board board);
 
 
+
 }

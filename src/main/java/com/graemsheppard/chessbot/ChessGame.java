@@ -100,6 +100,7 @@ public class ChessGame {
                 .flatMap(p -> p.getValidMoves(board).stream())
                 .filter(m -> m.getMoveType() == finalMoveType)
                 .filter(m -> m.getDestination().equals(destination))
+                .filter(m -> m.isSafe(board))
                 .toList();
 
         if (moveList.size() == 0)
