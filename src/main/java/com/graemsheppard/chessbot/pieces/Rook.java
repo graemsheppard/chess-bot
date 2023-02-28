@@ -46,4 +46,32 @@ public class Rook extends Piece {
         return possibleMoves;
     }
 
+    @Override
+    public List<Location> getAttackingTiles(Board board) {
+        List<Location> possibleLocations = new ArrayList<>();
+
+        for (int k = 0; k < 2; k++) {
+            for (int i = -1; i < 2; i += 2) {
+                Location newLocation;
+                if (k == 0)
+                    newLocation = this.location.addRanks(i);
+                else
+                    newLocation = this.location.addFiles(i);
+                while(newLocation.isValid()) {
+                    Piece piece = board.getBoardAt(newLocation);
+                    possibleLocations.add(newLocation);
+                    if (piece != null) {
+                        break;
+                    }
+                    if (k == 0)
+                        newLocation = newLocation.addRanks(i);
+                    else
+                        newLocation = newLocation.addFiles(i);
+                }
+            }
+        }
+
+        return possibleLocations;
+    }
+
 }

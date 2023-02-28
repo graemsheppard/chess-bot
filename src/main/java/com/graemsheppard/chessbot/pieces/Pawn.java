@@ -7,8 +7,11 @@ import java.util.List;
 
 public class Pawn extends Piece {
 
+    private final int direction;
+
     public Pawn(Color color, Location location) {
         super(color, location);
+        this.direction = this.color == Color.WHITE ? 1 : -1;
         this.character = 'p';
         this.codePoint = this.color == Color.BLACK ? '\u265f' : '\u2657';
         this.value = 1;
@@ -37,6 +40,18 @@ public class Pawn extends Piece {
             possibleMoves.add(new Move(this, newLocation4, MoveType.ATTACK));
 
         return possibleMoves;
+    }
+
+    @Override
+    public List<Location> getAttackingTiles(Board board) {
+        List<Location> possibleLocations = new ArrayList<>();
+        Location newLocation1 = this.location.addRanks(direction).addFiles(-1);
+        if (newLocation1.isValid())
+            possibleLocations.add(newLocation1);
+        Location newLocation2 = this.location.addRanks(direction).addFiles(1);
+        if (newLocation2.isValid())
+            possibleLocations.add(newLocation2);
+        return possibleLocations;
     }
 
     public String getImgPath() {

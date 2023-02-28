@@ -43,5 +43,7 @@ public abstract class Piece {
     }
     public abstract List<Move> getValidMoves(Board board);
 
+    public abstract List<Location> getAttackingTiles(Board board);
+
 
 }

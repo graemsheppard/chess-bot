@@ -41,4 +41,25 @@ public class Knight extends Piece {
         return possibleMoves;
     }
 
+    @Override
+    public List<Location> getAttackingTiles(Board board) {
+        List<Location> possibleLocations = new ArrayList<>();
+        for (int k = 0; k < 2; k++) {
+            for (int i : new int[] { 1, -1 }) {
+                for (int j : new int[] { 2, -2 }) {
+                    Location newLocation;
+                    if (k == 0)
+                        newLocation = this.location.addRanks(i).addFiles(j);
+                    else
+                        newLocation = this.location.addRanks(j).addFiles(i);
+                    if (newLocation.isValid()) {
+                        possibleLocations.add(newLocation);
+                    }
+                }
+            }
+        }
+        return possibleLocations;
+    }
+
+
 }

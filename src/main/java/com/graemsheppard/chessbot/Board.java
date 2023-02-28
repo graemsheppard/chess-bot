@@ -13,6 +13,12 @@ public class Board {
     @Getter
     private final Piece[][] grid;
 
+    @Getter
+    private final King wKing;
+
+    @Getter
+    private final King bKing;
+
     public Board() {
         grid = new Piece[8][8];
 
@@ -68,6 +74,8 @@ public class Board {
         // Initialize Kings
         King wKing = new King(Color.WHITE, new Location('e', '1'));
         King bKing = new King(Color.BLACK, new Location('e', '8'));
+        this.wKing = wKing;
+        this.bKing = bKing;
         setOnBoard(wKing);
         setOnBoard(bKing);
     }
@@ -93,5 +101,22 @@ public class Board {
         move.getPiece().move(move.getDestination());
         move.getPiece().setMoved(true);
         setOnBoard(move.getPiece());
+    }
+
+    /**
+     * @param color The color for which these tiles are unsafe
+     * @return A list of locations that are unsafe
+     */
+    public List<Location> getUnsafeTiles(Color color) {
+        return this.getPieces()
+                .filter(p -> p.getColor() != color)
+                .flatMap(p -> p.getAttackingTiles(this).stream())
+                .toList();
+    }
+
+    public boolean kingInCheck(Color color) {
+        King king = color == Color.WHITE ? wKing : bKing;
+        return this.getUnsafeTiles(color)
+                .stream().anyMatch(l -> l.equals(king.getLocation()));
     }
 }

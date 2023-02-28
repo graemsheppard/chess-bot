@@ -92,12 +92,6 @@ public class ChessGame {
                 moveType = MoveType.MOVE;
         }
 
-        List<Move> moveList1 = this.board.getPieces()
-                .filter(p -> p.getColor() == this.turn)
-                .filter(Piece::isAlive)
-                .filter(p -> p.getClass() == pieceType)
-                .flatMap(p -> p.getValidMoves(board).stream()).toList();
-
         MoveType finalMoveType = moveType;
         List<Move> moveList = this.board.getPieces()
                 .filter(p -> p.getColor() == this.turn)
