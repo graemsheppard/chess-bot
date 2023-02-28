@@ -35,18 +35,18 @@ public class Main {
 
     public static void main(String[] args) {
 
-        DiscordClient client = DiscordClient.create(getConfigString("discord.bot.token"));
-        Mono<Void> login = client.withGateway(ChessGateway::create);
-
-        login.block();
+//        DiscordClient client = DiscordClient.create(getConfigString("discord.bot.token"));
+//        Mono<Void> login = client.withGateway(ChessGateway::create);
+//
+//        login.block();
         ChessGame game = new ChessGame();
         Scanner scanner = new Scanner(System.in);
-        Frame frame = new Frame(game.getBoard(), game.getCapturedWhites(), game.getCapturedBlacks());
+        Frame frame = new Frame(game.getBoard());
 
         while (true) {
             System.out.print("\n" + game.getTurn().toString() + " MOVE: ");
             String command = scanner.nextLine().trim();
-            if (game.move(command))
+            if (game.move(command)) {}
                 frame.redraw();
         }
 

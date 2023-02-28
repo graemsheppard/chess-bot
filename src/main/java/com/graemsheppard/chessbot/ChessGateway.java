@@ -71,7 +71,7 @@ public class ChessGateway {
                                     } catch (Exception e) {
 
                                     }
-                                    game.doRandomMove();
+//                                    game.doRandomMove();
                                 } else {
                                     return Mono.empty();
                                 }
@@ -87,9 +87,9 @@ public class ChessGateway {
                             return Mono.empty();
                         }
 
-                        MainPanel panel = new MainPanel(game.getBoard());
+//                        MainPanel panel = new MainPanel(game.getBoard());
                         return c.createMessage(MessageCreateSpec.builder()
-                                .addFile("game.png", panel.getImageStream())
+                                .addFile("game.png", null)
                                 .addEmbed(EmbedCreateSpec.builder()
                                         .image("attachment://game.png")
                                         .color(game.getTurn() == com.graemsheppard.chessbot.Color.BLACK ? discord4j.rest.util.Color.BLACK : discord4j.rest.util.Color.WHITE)
@@ -129,14 +129,14 @@ public class ChessGateway {
 
             DiscordChessGame game1 = new DiscordChessGame(user1, user2);
 
-            if (gateway.getSelfId().equals(game1.getWhite().getId()))
-                game1.doRandomMove();
+            if (gateway.getSelfId().equals(game1.getWhite().getId())) {}
+//                game1.doRandomMove();
 
-            MainPanel panel = new MainPanel(game1.getBoard());
-            InputStream is = panel.getImageStream();
+//            MainPanel panel = new MainPanel(game1.getBoard());
+//            InputStream is = panel.getImageStream();
 
             Mono<Void> replyWithImage = event.reply(InteractionApplicationCommandCallbackSpec.builder()
-                    .files(List.of(MessageCreateFields.File.of("game.png", is)))
+                    .files(List.of(MessageCreateFields.File.of("game.png", null)))
                     .addEmbed(EmbedCreateSpec.builder()
                             .image("attachment://game.png")
                             .color(game1.getTurn() == com.graemsheppard.chessbot.Color.BLACK ? discord4j.rest.util.Color.BLACK : discord4j.rest.util.Color.WHITE)

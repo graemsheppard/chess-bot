@@ -1,5 +1,6 @@
 package com.graemsheppard.chessbot.ui;
 
+import com.graemsheppard.chessbot.Board;
 import com.graemsheppard.chessbot.pieces.Piece;
 
 import javax.imageio.ImageIO;
@@ -13,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class Frame extends JFrame {
-    public Frame(Piece[][] board, List<Piece> capturedWhites, List<Piece> capturedBlacks) {
+    public Frame(Board board) {
 
         MainPanel mainPanel = new MainPanel(board);
 
@@ -22,7 +23,6 @@ public class Frame extends JFrame {
         this.pack();
         this.setTitle("Chess Board");
         this.setLocationRelativeTo(null);
-        this.setSize(1000, 1000);
         this.setVisible(true);
         this.setResizable(false);
         this.setBackground(Color.WHITE);

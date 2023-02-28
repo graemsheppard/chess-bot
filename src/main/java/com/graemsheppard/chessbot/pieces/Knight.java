@@ -1,25 +1,23 @@
 package com.graemsheppard.chessbot.pieces;
 
-import com.graemsheppard.chessbot.Color;
-import com.graemsheppard.chessbot.Location;
-import com.graemsheppard.chessbot.MoveType;
+import com.graemsheppard.chessbot.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Knight extends Piece {
 
-    private final int value = 3;
-
     public Knight(Color color, Location location) {
         super(color, location);
         this.character = 'N';
         this.codePoint = this.color == Color.BLACK ? '\u265e' : '\u2658';
+        this.imgPath = this.color == Color.WHITE ? "wKnight.png" : "bKnight.png";
+        this.value = 3;
     }
 
     @Override
-    public List<Location> getValidMoves(Piece[][] board, MoveType type) {
-        List<Location> possibleMoves = new ArrayList<>();
+    public List<Move> getValidMoves(Board board) {
+        List<Move> possibleMoves = new ArrayList<>();
         for (int k = 0; k < 2; k++) {
             for (int i : new int[] { 1, -1 }) {
                 for (int j : new int[] { 2, -2 }) {
@@ -28,10 +26,13 @@ public class Knight extends Piece {
                         newLocation = this.location.addRanks(i).addFiles(j);
                     else
                         newLocation = this.location.addRanks(j).addFiles(i);
+
                     if (newLocation.isValid()) {
-                        Piece piece = tileOccupied(newLocation, board);
-                        if (piece == null || !piece.color.equals(this.color)) {
-                            possibleMoves.add(newLocation);
+                        Piece piece = board.getBoardAt(newLocation);
+                        if (piece == null) {
+                            possibleMoves.add(new Move(this, newLocation, MoveType.MOVE));
+                        } else if (piece.color != this.color) {
+                            possibleMoves.add(new Move(this, newLocation, MoveType.ATTACK));
                         }
                     }
                 }
@@ -40,7 +41,4 @@ public class Knight extends Piece {
         return possibleMoves;
     }
 
-    public String getImgPath() {
-        return this.color == Color.WHITE ? "wKnight.png" : "bKnight.png";
-    }
 }

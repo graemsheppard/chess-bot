@@ -1,8 +1,6 @@
 package com.graemsheppard.chessbot.pieces;
 
-import com.graemsheppard.chessbot.Color;
-import com.graemsheppard.chessbot.Location;
-import com.graemsheppard.chessbot.MoveType;
+import com.graemsheppard.chessbot.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,29 +8,27 @@ import java.util.stream.Collectors;
 
 public class Bishop extends Piece {
 
-    private final int value = 3;
-
     public Bishop(Color color, Location location) {
         super(color, location);
         this.character = 'B';
-        this. codePoint = this.color == Color.BLACK ? '\u265d' : '\u2657';
+        this.codePoint = this.color == Color.BLACK ? '\u265d' : '\u2657';
+        this.value = 3;
     }
 
-    public List<Location> getValidMoves(Piece[][] board, MoveType type) {
-        List<Location> possibleMoves = new ArrayList<>();
-
+    public List<Move> getValidMoves(Board board) {
+        List<Move> possibleMoves = new ArrayList<>();
         for (int i = -1; i < 2; i += 2) {
             for (int j = -1; j < 2; j +=2) {
                 Location newLocation = this.location.addRanks(i).addFiles(j);
                 while(newLocation.isValid()) {
-                    Piece piece = tileOccupied(newLocation, board);
-                    if (piece != null && piece.color == this.color) {
-                        break;
-                    } else if (piece != null) {
-                        possibleMoves.add(newLocation);
+                    Piece piece = board.getBoardAt(location);
+                    if (piece == null) {
+                        possibleMoves.add(new Move(this, newLocation, MoveType.MOVE));
+                    } else {
+                        if (piece.color != this.color)
+                            possibleMoves.add(new Move(this, newLocation, MoveType.ATTACK));
                         break;
                     }
-                    possibleMoves.add(newLocation);
                     newLocation = newLocation.addRanks(i).addFiles(j);
                 }
             }
