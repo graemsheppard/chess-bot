@@ -3,6 +3,7 @@ package com.graemsheppard.chessbot;
 import com.graemsheppard.chessbot.pieces.*;
 import lombok.Getter;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -97,10 +98,17 @@ public class Board {
     }
 
     public void move(Move move) {
-        setBoardAt(move.getPiece().getLocation(), null);
-        move.getPiece().move(move.getDestination());
-        move.getPiece().setMoved(true);
-        setOnBoard(move.getPiece());
+        Piece piece = move.getPiece();
+        if (move.getPromotionType() != null) {
+            try {
+                piece = move.getPromotionType().getDeclaredConstructor(Color.class, Location.class).newInstance(piece.getColor(), piece.getLocation());
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+        setBoardAt(piece.getLocation(), null);
+        piece.move(move.getDestination());
+        setOnBoard(piece);
     }
 
     /**

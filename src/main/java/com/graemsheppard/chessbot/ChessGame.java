@@ -100,6 +100,7 @@ public class ChessGame {
         }
 
         MoveType finalMoveType = moveType;
+        Class<? extends Piece> finalPromotionType = promotionType;
         List<Move> moveList = this.board.getPieces()
                 .filter(p -> p.getColor() == this.turn)
                 .filter(Piece::isAlive)
@@ -115,6 +116,8 @@ public class ChessGame {
 
         if (moveList.size() == 1) {
             Move move = moveList.get(0);
+            if (promotionType != null)
+                move.setPromotionType(promotionType);
             board.move(move);
             turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
             return true;

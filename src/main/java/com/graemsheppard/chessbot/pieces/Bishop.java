@@ -46,7 +46,7 @@ public class Bishop extends Piece {
             for (int j = -1; j < 2; j +=2) {
                 Location newLocation = this.location.addRanks(i).addFiles(j);
                 while(newLocation.isValid()) {
-                    Piece piece = board.getBoardAt(location);
+                    Piece piece = board.getBoardAt(newLocation);
                     possibleLocations.add(newLocation);
                     if (piece != null) {
                         break;
