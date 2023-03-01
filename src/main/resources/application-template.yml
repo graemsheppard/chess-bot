@@ -1,0 +1,8 @@
+discord:
+  application:
+    client_id: <your_client_id>
+    client_secret: <your_client_secret>
+    public_key: <your_public_key>
+  bot:
+    permission: 395137116224
+    token: <your_bot_token>
