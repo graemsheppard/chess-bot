@@ -107,6 +107,26 @@ public class Move {
             if (attackingKnight.isPresent() && !this.getDestination().equals(attackingKnight.get().getLocation()))
                 return false;
 
+            // Check for pawns
+            int pawnDir = king.getColor() == Color.WHITE ? 1 : -1;
+            Location pLoc1 = king.getLocation().addRanks(pawnDir).addFiles(-1);
+            Location pLoc2 = king.getLocation().addRanks(pawnDir).addFiles(1);
+
+            Piece piece1 = board.getBoardAt(pLoc1);
+            Piece piece2 = board.getBoardAt(pLoc2);
+
+            // A pawn is checking on lower file
+            if (piece1 instanceof Pawn && piece1.getColor() != king.getColor()) {
+                if (!this.getDestination().equals(piece1.getLocation()))
+                    return false;
+            }
+
+            // A pawn is checking on higher file
+            if (piece2 instanceof Pawn && piece2.getColor() != king.getColor()) {
+                if (!this.getDestination().equals(piece2.getLocation()))
+                    return false;
+            }
+
             // Check if the move is onto the same file, rank, or diagonal as the king
             // Invalid move if not
             diffX = Math.abs(king.getLocation().getFile() - this.getDestination().getFile());

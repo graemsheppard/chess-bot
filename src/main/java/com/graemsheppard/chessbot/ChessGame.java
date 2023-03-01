@@ -20,7 +20,7 @@ public class ChessGame {
 
     }
 
-    // TODO: Handle pawn promotions, checks, and checkmates
+    // TODO: Handle checks, and checkmates
 
     public boolean move(String command) {
 
@@ -89,6 +89,10 @@ public class ChessGame {
             return false;
         }
 
+        if (promotionType != null && destination.getRank() != '1' && destination.getRank() != '8') {
+            return false;
+        }
+
         MoveType moveType;
         if (command.length() == 2)
             moveType = MoveType.MOVE;
@@ -121,6 +125,51 @@ public class ChessGame {
             board.move(move);
             turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
             return true;
+        }
+
+        if (moveList.size() == 2) {
+            if (attackIdx <= 0)
+                return false;
+
+            char rankOrFile = command.charAt(attackIdx - 1);
+
+            Move move1 = moveList.get(0);
+            Move move2 = moveList.get(1);
+
+            if (move1.getPiece().getLocation().getFile() != move2.getPiece().getLocation().getFile()) {
+                if (rankOrFile >= 'a' && rankOrFile <= 'h') {
+                    Move move = null;
+                    if (move1.getPiece().getLocation().getFile() == rankOrFile)
+                        move = move1;
+                    else if (move2.getPiece().getLocation().getFile() == rankOrFile)
+                        move = move2;
+
+                    if (move != null) {
+                        if (promotionType != null)
+                            move.setPromotionType(promotionType);
+                        board.move(move);
+                        turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+                    }
+                }
+
+            }
+            else if (move1.getPiece().getLocation().getRank() != move2.getPiece().getLocation().getRank()) {
+                if (rankOrFile >= '1' && rankOrFile <= '8') {
+                    Move move = null;
+                    if (move1.getPiece().getLocation().getRank() == rankOrFile)
+                        move = move1;
+                    else if (move2.getPiece().getLocation().getRank() == rankOrFile)
+                        move = move2;
+
+                    if (move != null) {
+                        if (promotionType != null)
+                            move.setPromotionType(promotionType);
+                        board.move(move);
+                        turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+                    }
+                }
+            }
+
         }
 
         return false;
