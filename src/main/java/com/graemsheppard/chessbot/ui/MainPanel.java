@@ -1,7 +1,6 @@
 package com.graemsheppard.chessbot.ui;
 
 import com.graemsheppard.chessbot.Board;
-import com.graemsheppard.chessbot.pieces.Piece;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -11,14 +10,13 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.List;
 
 
 public class MainPanel extends JPanel {
 
     public MainPanel (Board board) {
 
+        this.setSize(new Dimension(9 * Constants.BOARD_SCALE, 9 * Constants.BOARD_SCALE));
         this.setPreferredSize(new Dimension(9 * Constants.BOARD_SCALE, 9 * Constants.BOARD_SCALE));
         this.setBackground(Color.getHSBColor(0.6f, 0.5f, 0.7f));
         this.setLayout(new GridBagLayout());

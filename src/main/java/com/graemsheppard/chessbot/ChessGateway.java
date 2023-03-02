@@ -5,24 +5,22 @@ import com.graemsheppard.chessbot.ui.MainPanel;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
-import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.command.ApplicationCommand;
 import discord4j.core.object.command.ApplicationCommandOption;
-import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
-import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.core.object.entity.channel.ThreadChannel;
 import discord4j.core.spec.*;
 import discord4j.discordjson.json.ApplicationCommandOptionData;
 import discord4j.discordjson.json.ApplicationCommandRequest;
+import discord4j.rest.util.Color;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -62,39 +60,36 @@ public class ChessGateway {
 
                         DiscordChessGame game = activeGames.get(c.getId());
 
-                        if (game.getWhite().getId().equals(gateway.getSelfId())) { // Check if bot game
-                            if (user.getId().equals(gateway.getSelfId())) { // Message from bot
-                                if (game.getCurrentUser().getId().equals(gateway.getSelfId())) { // Bot's turn
-                                    try {
-                                        c.type();
-                                        Thread.sleep(1200);
-                                    } catch (Exception e) {
+                        if (!user.getId().equals(game.getCurrentUser().getId()))
+                            return event.getMessage().delete();
 
-                                    }
-//                                    game.doRandomMove();
-                                } else {
-                                    return Mono.empty();
+                        else if (!game.move(event.getMessage().getContent()))
+                            return event.getMessage().delete();
+
+                        MainPanel panel = new MainPanel(game.getBoard());
+
+                        Mono<Message> userEdit = game.getMessage().edit()
+                                .withFiles(MessageCreateFields.File.of("game.png", panel.getImageStream()))
+                                .withEmbeds(mainEmbed(game).withColor(turnColor(game)))
+                                .withAttachments();
+
+                        Mono<Message> botEdit = Mono.fromRunnable(() -> {
+                            if (game.getCurrentUser().getId().equals(gateway.getSelfId())) {
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (InterruptedException e) {
+                                    throw new RuntimeException(e);
                                 }
-                            } else if (!game.move(event.getMessage().getContent())) { // Player's turn
-                                return Mono.empty();
+                                game.doRandomMove();
+                                game.getMessage().edit()
+                                    .withFiles(MessageCreateFields.File.of("game.png", panel.getImageStream()))
+                                    .withEmbeds(mainEmbed(game).withColor(turnColor(game)))
+                                    .withAttachments()
+                                    .block();
                             }
+                        });
 
-                        } else if (game.getCurrentUser().getId().equals(user.getId())) {
-                            if (!game.move(event.getMessage().getContent())) {
-                                return Mono.empty();
-                            }
-                        } else {
-                            return Mono.empty();
-                        }
-
-//                        MainPanel panel = new MainPanel(game.getBoard());
-                        return c.createMessage(MessageCreateSpec.builder()
-                                .addFile("game.png", null)
-                                .addEmbed(EmbedCreateSpec.builder()
-                                        .image("attachment://game.png")
-                                        .color(game.getTurn() == com.graemsheppard.chessbot.Color.BLACK ? discord4j.rest.util.Color.BLACK : discord4j.rest.util.Color.WHITE)
-                                        .build())
-                                .build());
+                        return userEdit.then(botEdit);
                     });
         }).then();
         return createCommand.and(onCommand).and(onThreadMessage);
@@ -122,38 +117,35 @@ public class ChessGateway {
 
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
 
-            String fullName1 =  user1.getUsername() + "#" + user1.getDiscriminator();
-            String fullName2 = user2.getUsername() + "#" + user2.getDiscriminator();
+            DiscordChessGame game = new DiscordChessGame(user1, user2);
+
+            String fullName1 =  game.getWhite().getUsername() + "#" + game.getWhite().getDiscriminator();
+            String fullName2 = game.getBlack().getUsername() + "#" + game.getBlack().getDiscriminator();
 
             String gameName = fullName1 + " vs. " + fullName2 + " on " + dtf.format(LocalDateTime.now());
 
-            DiscordChessGame game1 = new DiscordChessGame(user1, user2);
+            if (gateway.getSelfId().equals(game.getWhite().getId())) {}
+                game.doRandomMove();
 
-            if (gateway.getSelfId().equals(game1.getWhite().getId())) {}
-//                game1.doRandomMove();
+            MainPanel panel = new MainPanel(game.getBoard());
 
-//            MainPanel panel = new MainPanel(game1.getBoard());
-//            InputStream is = panel.getImageStream();
+            InputStream is = panel.getImageStream();
+
+            MessageCreateFields.File f = MessageCreateFields.File.of("game.png", panel.getImageStream());
 
             Mono<Void> replyWithImage = event.reply(InteractionApplicationCommandCallbackSpec.builder()
-                    .files(List.of(MessageCreateFields.File.of("game.png", null)))
-                    .addEmbed(EmbedCreateSpec.builder()
-                            .image("attachment://game.png")
-                            .color(game1.getTurn() == com.graemsheppard.chessbot.Color.BLACK ? discord4j.rest.util.Color.BLACK : discord4j.rest.util.Color.WHITE)
-                            .title("Chess Match Started")
-                            .addField(":white_medium_square: White ", fullName1, true)
-                            .addField(":black_medium_square: Black ", fullName2, true)
-                            .build())
+                    .files(List.of(f))
+                    .addEmbed(mainEmbed(game))
                     .build());
 
             Mono<Void> startThread = event.getReply().flatMap(r -> {
-                game1.setMessage(r);
+                game.setMessage(r);
                 return r.startThread(StartThreadSpec.builder()
                                 .name(gameName)
                                 .autoArchiveDuration(ThreadChannel.AutoArchiveDuration.DURATION2)
                                 .build())
                         .flatMap(t -> {
-                            activeGames.put(t.getId(), game1);
+                            activeGames.put(t.getId(), game);
                             return Mono.empty();
                         }).then();
             });
@@ -161,5 +153,21 @@ public class ChessGateway {
             return replyWithImage.then(startThread);
         }
         return Mono.empty();
+    }
+
+    private static EmbedCreateSpec mainEmbed(DiscordChessGame game) {
+        String fullName1 =  game.getWhite().getUsername() + "#" + game.getWhite().getDiscriminator();
+        String fullName2 = game.getBlack().getUsername() + "#" + game.getBlack().getDiscriminator();
+        return EmbedCreateSpec.builder()
+                .image("attachment://game.png")
+                .color(turnColor(game))
+                .title("Chess Match Started")
+                .addField(":white_medium_square: White ", fullName1, true)
+                .addField(":black_medium_square: Black ", fullName2, true)
+                .build();
+    }
+
+    private static Color turnColor(DiscordChessGame game) {
+        return game.getTurn() == com.graemsheppard.chessbot.Color.BLACK ? Color.BLACK : Color.WHITE;
     }
 }

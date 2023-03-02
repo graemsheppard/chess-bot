@@ -1,6 +1,9 @@
 package com.graemsheppard.chessbot.pieces;
 
-import com.graemsheppard.chessbot.*;
+import com.graemsheppard.chessbot.Board;
+import com.graemsheppard.chessbot.Color;
+import com.graemsheppard.chessbot.Location;
+import com.graemsheppard.chessbot.Move;
 import lombok.Getter;
 import lombok.Setter;
 

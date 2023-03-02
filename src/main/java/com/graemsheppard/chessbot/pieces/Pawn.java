@@ -33,10 +33,10 @@ public class Pawn extends Piece {
         }
 
         Location newLocation3 = this.location.addRanks(direction).addFiles(-1);
-        if (newLocation3.isValid() && board.getBoardAt(newLocation3) != null)
+        if (newLocation3.isValid() && board.getBoardAt(newLocation3) != null && board.getBoardAt(newLocation3).getColor() != this.getColor())
             possibleMoves.add(new Move(this, newLocation3, MoveType.ATTACK));
         Location newLocation4 = this.location.addRanks(direction).addFiles(1);
-        if (newLocation4.isValid() && board.getBoardAt(newLocation4) != null)
+        if (newLocation4.isValid() && board.getBoardAt(newLocation4) != null && board.getBoardAt(newLocation4).getColor() != this.getColor())
             possibleMoves.add(new Move(this, newLocation4, MoveType.ATTACK));
 
         return possibleMoves;

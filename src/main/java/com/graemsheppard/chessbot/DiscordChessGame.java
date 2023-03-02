@@ -1,6 +1,5 @@
 package com.graemsheppard.chessbot;
 
-import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import lombok.Getter;

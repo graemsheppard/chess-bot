@@ -3,8 +3,8 @@ package com.graemsheppard.chessbot;
 import com.graemsheppard.chessbot.pieces.*;
 import lombok.Getter;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class ChessGame {
 
@@ -86,6 +86,11 @@ public class ChessGame {
         destination = new Location(command.substring(attackIdx + 1, attackIdx + 3));
 
         if (!destination.isValid()) {
+            return false;
+        }
+
+        boolean shouldPromote = isPawn && (destination.getRank() == '1' || destination.getRank() == '8');
+        if (promotionType == null &&  shouldPromote) {
             return false;
         }
 
@@ -231,6 +236,21 @@ public class ChessGame {
         }
 
         return false;
+    }
+
+    public void doRandomMove() {
+        List<Move> moveList = this.board.getPieces()
+                .filter(p -> p.getColor() == this.turn)
+                .flatMap(p -> p.getValidMoves(board).stream())
+                .filter(m -> m.isSafe(board))
+                .toList();
+
+        Random random = new Random();
+        Move move = moveList.get(random.nextInt(moveList.size()));
+        if (move != null) {
+            board.move(move);
+            turn = this.turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+        }
     }
 
 }
