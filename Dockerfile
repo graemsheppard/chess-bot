@@ -5,7 +5,11 @@ WORKDIR /gradle
 COPY --chown=gradle:gradle . .
 RUN gradle build --no-daemon
 
-FROM openjdk:17
+FROM amazoncorretto:17-alpine
+
+RUN apk add --no-cache msttcorefonts-installer fontconfig
+RUN update-ms-fonts
+
 
 RUN mkdir /app
 COPY --from=build /gradle/build/libs/*.jar /app/app.jar
