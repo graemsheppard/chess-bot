@@ -20,6 +20,11 @@ public class ChessGame {
 
     }
 
+    @Getter
+    private Location lastMoveStart;
+
+    @Getter Location lastMoveEnd;
+
     // TODO: Handle checks, and checkmates
 
     public boolean move(String command) {
@@ -127,13 +132,15 @@ public class ChessGame {
             Move move = moveList.get(0);
             if (promotionType != null)
                 move.setPromotionType(promotionType);
+            lastMoveStart = move.getPiece().getLocation().addFiles(0);
+            lastMoveEnd = move.getDestination().addFiles(0);
             board.move(move);
             turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
             return true;
         }
 
-        if (moveList.size() == 2) {
-            if (attackIdx <= 0)
+        if (moveList.size() == 2) { // TODO: Fix this
+            if (attackIdx < 0)
                 return false;
 
             char rankOrFile = command.charAt(attackIdx - 1);
@@ -152,6 +159,8 @@ public class ChessGame {
                     if (move != null) {
                         if (promotionType != null)
                             move.setPromotionType(promotionType);
+                        lastMoveStart = move.getPiece().getLocation().addFiles(0);
+                        lastMoveEnd = move.getDestination().addFiles(0);
                         board.move(move);
                         turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
                     }
@@ -169,6 +178,8 @@ public class ChessGame {
                     if (move != null) {
                         if (promotionType != null)
                             move.setPromotionType(promotionType);
+                        lastMoveStart = move.getPiece().getLocation().addFiles(0);
+                        lastMoveEnd = move.getDestination().addFiles(0);
                         board.move(move);
                         turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
                     }
@@ -248,6 +259,8 @@ public class ChessGame {
         Random random = new Random();
         Move move = moveList.get(random.nextInt(moveList.size()));
         if (move != null) {
+            lastMoveStart = move.getPiece().getLocation().addFiles(0);
+            lastMoveEnd = move.getDestination().addFiles(0);
             board.move(move);
             turn = this.turn == Color.WHITE ? Color.BLACK : Color.WHITE;
         }

@@ -20,7 +20,7 @@ public class Main {
         login.block();
         ChessGame game = new ChessGame();
         Scanner scanner = new Scanner(System.in);
-        Frame frame = new Frame(game.getBoard());
+        Frame frame = new Frame(game);
 
         while (true) {
             System.out.print("\n" + game.getTurn().toString() + " MOVE: ");

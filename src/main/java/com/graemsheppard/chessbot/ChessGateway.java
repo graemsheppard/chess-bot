@@ -30,7 +30,7 @@ public class ChessGateway {
 
     public static Publisher<?> create(GatewayDiscordClient gateway) {
 
-        ApplicationCommandRequest cmdRequest = ApplicationCommandRequest.builder()
+        ApplicationCommandRequest chessRequest = ApplicationCommandRequest.builder()
                 .name("chess")
                 .description("Challenge a friend to a chess game")
                 .type(ApplicationCommand.Type.CHAT_INPUT.getValue())
@@ -43,10 +43,18 @@ public class ChessGateway {
                 )
                 .build();
 
+        ApplicationCommandRequest resignRequest = ApplicationCommandRequest.builder()
+                .name("resign")
+                .description("Resign from game taking place in this thread, losing instantly")
+                .type(ApplicationCommand.Type.CHAT_INPUT.getValue())
+                .build();
+
         // Register commands with discord
-        Mono<Void> createCommand = gateway.getRestClient().getApplicationService()
-                .createGlobalApplicationCommand((long) Main.getConfigValue("discord.application.client_id"), cmdRequest)
-                .then();
+        Mono<Void> createCommands = gateway.getRestClient().getApplicationService()
+                .createGlobalApplicationCommand((long) Main.getConfigValue("discord.application.client_id"), chessRequest)
+                .and(
+                        gateway.getRestClient().getApplicationService()
+                        .createGlobalApplicationCommand((long) Main.getConfigValue("discord.application.client_id"), resignRequest));
 
         Mono<Void> onCommand = gateway.on(ChatInputInteractionEvent.class, e -> commandHandler(gateway, e)).then();
 
@@ -66,7 +74,7 @@ public class ChessGateway {
                         else if (!game.move(event.getMessage().getContent()))
                             return event.getMessage().delete();
 
-                        MainPanel panel = new MainPanel(game.getBoard());
+                        MainPanel panel = new MainPanel(game);
 
                         Mono<Message> userEdit = game.getMessage().edit()
                                 .withFiles(MessageCreateFields.File.of("game.png", panel.getImageStream()))
@@ -92,11 +100,25 @@ public class ChessGateway {
                         return userEdit.then(botEdit);
                     });
         }).then();
-        return createCommand.and(onCommand).and(onThreadMessage);
+        return createCommands.and(onCommand).and(onThreadMessage);
     }
 
     private static Mono<Void> commandHandler(GatewayDiscordClient gateway, ChatInputInteractionEvent event) {
-        if (event.getCommandName().equals("chess")) {
+        if (event.getCommandName().equals("resign")) {
+            return event.getInteraction().getChannel()
+                    .ofType(ThreadChannel.class)
+                    .flatMap(t -> {
+                        if (activeGames.containsKey(t.getId())) {
+                            DiscordChessGame game = activeGames.get(t.getId());
+                            if (game.getWhite().getId().equals(event.getInteraction().getUser().getId())
+                            || game.getBlack().getId().equals(event.getInteraction().getUser().getId())) {
+                                activeGames.remove(t.getId());
+                                return t.delete();
+                            }
+                        }
+                       return Mono.empty();
+                    });
+        } else if (event.getCommandName().equals("chess")) {
             User user1 = event.getOption("user").get().getValue().get().asUser().block();
             User user2 = event.getInteraction().getUser();
 
@@ -127,7 +149,7 @@ public class ChessGateway {
             if (gateway.getSelfId().equals(game.getWhite().getId())) {}
                 game.doRandomMove();
 
-            MainPanel panel = new MainPanel(game.getBoard());
+            MainPanel panel = new MainPanel(game);
 
             InputStream is = panel.getImageStream();
 

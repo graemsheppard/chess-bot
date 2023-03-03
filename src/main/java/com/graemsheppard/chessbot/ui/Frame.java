@@ -1,14 +1,15 @@
 package com.graemsheppard.chessbot.ui;
 
 import com.graemsheppard.chessbot.Board;
+import com.graemsheppard.chessbot.ChessGame;
 
 import javax.swing.*;
 import java.awt.Color;
 
 public class Frame extends JFrame {
-    public Frame(Board board) {
+    public Frame(ChessGame game) {
 
-        MainPanel mainPanel = new MainPanel(board);
+        MainPanel mainPanel = new MainPanel(game);
 
         this.add(mainPanel);
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

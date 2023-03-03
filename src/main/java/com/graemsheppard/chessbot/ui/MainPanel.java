@@ -1,6 +1,7 @@
 package com.graemsheppard.chessbot.ui;
 
 import com.graemsheppard.chessbot.Board;
+import com.graemsheppard.chessbot.ChessGame;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -14,13 +15,13 @@ import java.io.InputStream;
 
 public class MainPanel extends JPanel {
 
-    public MainPanel (Board board) {
+    public MainPanel (ChessGame game) {
 
         this.setSize(new Dimension(9 * Constants.BOARD_SCALE, 9 * Constants.BOARD_SCALE));
         this.setPreferredSize(new Dimension(9 * Constants.BOARD_SCALE, 9 * Constants.BOARD_SCALE));
         this.setBackground(Color.getHSBColor(0.6f, 0.5f, 0.7f));
         this.setLayout(new GridBagLayout());
-        BoardPanel boardPanel = new BoardPanel(board);
+        BoardPanel boardPanel = new BoardPanel(game);
         this.add(boardPanel);
         this.doLayout();
     }
