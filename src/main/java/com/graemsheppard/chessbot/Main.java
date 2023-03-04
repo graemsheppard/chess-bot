@@ -11,11 +11,11 @@ import java.util.*;
 
 public class Main {
 
-
-
     public static void main(String[] args) {
 
-        DiscordClient client = DiscordClient.create(getConfigString("discord.bot.token"));
+        final AppConfig config = AppConfig.getInstance();
+
+        DiscordClient client = DiscordClient.create(config.getString("discord.bot.token"));
         Mono<Void> login = client.withGateway(ChessGateway::create);
         login.block();
         ChessGame game = new ChessGame();
@@ -31,25 +31,8 @@ public class Main {
 
     }
 
-     static HashMap<String, Object> getConfig() {
-        InputStream inputStream = Main.class.getClassLoader()
-                .getResourceAsStream("application.yml");
-        Yaml yaml = new Yaml();
-        return yaml.load(inputStream);
-    }
 
-    public static Object getConfigValue(String path) {
-        HashMap<String, Object> base = getConfig();
-        String[] keys = path.split("\\.");
-        HashMap<String, Object> current = base;
-        for (int i = 0; i < keys.length - 1; i++) {
-            current = (HashMap<String, Object>) current.get(keys[i]);
-        }
-        return current.get(keys[keys.length - 1]);
-    }
 
-    public static String getConfigString(String path) {
-        return (String) getConfigValue(path);
-    }
+
 
 }

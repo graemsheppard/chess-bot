@@ -13,4 +13,5 @@ RUN update-ms-fonts
 
 RUN mkdir /app
 COPY --from=build /gradle/build/libs/*.jar /app/app.jar
+ENV ENVIRONMENT=production
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -29,7 +29,7 @@ public class ChessGateway {
     private static ConcurrentHashMap<Snowflake, DiscordChessGame> activeGames = new ConcurrentHashMap();
 
     public static Publisher<?> create(GatewayDiscordClient gateway) {
-
+        final AppConfig config = AppConfig.getInstance();
         ApplicationCommandRequest chessRequest = ApplicationCommandRequest.builder()
                 .name("chess")
                 .description("Challenge a friend to a chess game")
@@ -51,10 +51,10 @@ public class ChessGateway {
 
         // Register commands with discord
         Mono<Void> createCommands = gateway.getRestClient().getApplicationService()
-                .createGlobalApplicationCommand((long) Main.getConfigValue("discord.application.client_id"), chessRequest)
+                .createGlobalApplicationCommand((long) config.getValue("discord.application.client_id"), chessRequest)
                 .and(
                         gateway.getRestClient().getApplicationService()
-                        .createGlobalApplicationCommand((long) Main.getConfigValue("discord.application.client_id"), resignRequest));
+                        .createGlobalApplicationCommand((long) config.getValue("discord.application.client_id"), resignRequest));
 
         Mono<Void> onCommand = gateway.on(ChatInputInteractionEvent.class, e -> commandHandler(gateway, e)).then();
 
