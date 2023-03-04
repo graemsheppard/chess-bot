@@ -146,7 +146,7 @@ public class ChessGateway {
 
             String gameName = fullName1 + " vs. " + fullName2 + " on " + dtf.format(LocalDateTime.now());
 
-            if (gateway.getSelfId().equals(game.getWhite().getId())) {}
+            if (gateway.getSelfId().equals(game.getWhite().getId()))
                 game.doRandomMove();
 
             MainPanel panel = new MainPanel(game);

@@ -1,0 +1,5 @@
+.idea
+.gradle
+application.yml
+application-template.yml
+build

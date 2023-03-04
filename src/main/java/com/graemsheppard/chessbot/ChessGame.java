@@ -225,6 +225,7 @@ public class ChessGame {
                         board.move(kingMove);
                         board.move(rookMove);
                         turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+                        return true;
                     }
                 }
             } else {
