@@ -36,7 +36,6 @@ public class ChessGame {
     public boolean move(String command) {
 
         Command parsed = new Command(command);
-
         if (!parsed.isValid())
             return false;
 

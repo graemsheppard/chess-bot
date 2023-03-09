@@ -11,10 +11,7 @@ import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.ThreadChannel;
-import discord4j.core.spec.EmbedCreateSpec;
-import discord4j.core.spec.InteractionApplicationCommandCallbackSpec;
-import discord4j.core.spec.MessageCreateFields;
-import discord4j.core.spec.StartThreadSpec;
+import discord4j.core.spec.*;
 import discord4j.discordjson.json.ApplicationCommandOptionData;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.rest.util.Color;
@@ -29,9 +26,16 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ChessGateway {
 
-    private static ConcurrentHashMap<Snowflake, DiscordChessGame> activeGames = new ConcurrentHashMap();
+    private static final ConcurrentHashMap<Snowflake, DiscordChessGame> activeGames = new ConcurrentHashMap<>();
 
     public static Publisher<?> create(GatewayDiscordClient gateway) {
+
+        return registerCommands(gateway)
+                .and(commandHandler(gateway))
+                .and(messageHandler(gateway));
+    }
+
+    private static Mono<Void> registerCommands(GatewayDiscordClient gateway) {
         final AppConfig config = AppConfig.getInstance();
         ApplicationCommandRequest chessRequest = ApplicationCommandRequest.builder()
                 .name("chess")
@@ -52,18 +56,103 @@ public class ChessGateway {
                 .type(ApplicationCommand.Type.CHAT_INPUT.getValue())
                 .build();
 
+        long clientId = (long) config.getValue("discord.application.client_id");
+
         // Register commands with discord
-        Mono<Void> createCommands = gateway.getRestClient().getApplicationService()
-                .createGlobalApplicationCommand((long) config.getValue("discord.application.client_id"), chessRequest)
-                .and(
-                        gateway.getRestClient().getApplicationService()
-                        .createGlobalApplicationCommand((long) config.getValue("discord.application.client_id"), resignRequest));
+        return gateway.getGuilds().flatMap(g ->
+                gateway.getRestClient()
+                        .getApplicationService()
+                        .createGuildApplicationCommand(clientId, g.getId().asLong(), chessRequest)
+                        .and(
+                                gateway.getRestClient()
+                                        .getApplicationService()
+                                        .createGuildApplicationCommand(clientId, g.getId().asLong(), resignRequest)
+                        )
+        ).then();
 
-        Mono<Void> onCommand = gateway.on(ChatInputInteractionEvent.class, e -> commandHandler(gateway, e)).then();
+    }
 
-        Mono<Void> onThreadMessage = gateway.on(MessageCreateEvent.class, event -> {
+    private static Mono<Void> commandHandler(GatewayDiscordClient gateway) {
+        return gateway.on(ChatInputInteractionEvent.class, event -> {
+            if (event.getCommandName().equals("resign")) {
+                return event.getInteraction().getChannel()
+                        .ofType(ThreadChannel.class)
+                        .flatMap(t -> {
+                            if (activeGames.containsKey(t.getId())) {
+                                DiscordChessGame game = activeGames.get(t.getId());
+                                if (game.getWhite().getId().equals(event.getInteraction().getUser().getId())
+                                        || game.getBlack().getId().equals(event.getInteraction().getUser().getId())) {
+                                    activeGames.remove(t.getId());
+                                    return t.delete();
+                                }
+                            }
+                            return Mono.empty();
+                        });
+            } else if (event.getCommandName().equals("chess")) {
+                User user1 = event.getOption("user").get().getValue().get().asUser().block();
+                User user2 = event.getInteraction().getUser();
+
+                if (user1.getId().equals(user2.getId())) {
+                    return event.reply(InteractionApplicationCommandCallbackSpec.builder()
+                            .ephemeral(true)
+                            .content("You cannot challenge yourself")
+                            .build());
+                }
+
+                if (activeGames.values().stream().anyMatch(game -> game.getWhite().getId().equals(user1.getId()) && game.getBlack().getId().equals(user2.getId())
+                        || game.getWhite().getId().equals(user2.getId()) && game.getBlack().getId().equals(user1.getId()))) {
+                    return event.reply(InteractionApplicationCommandCallbackSpec.builder()
+                            .ephemeral(true)
+                            .content("You already have a game against that user")
+                            .build());
+                }
+
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+
+                DiscordChessGame game = new DiscordChessGame(user1, user2);
+
+                String fullName1 =  game.getWhite().getUsername() + "#" + game.getWhite().getDiscriminator();
+                String fullName2 = game.getBlack().getUsername() + "#" + game.getBlack().getDiscriminator();
+
+                String gameName = fullName1 + " vs. " + fullName2 + " on " + dtf.format(LocalDateTime.now());
+
+                if (gateway.getSelfId().equals(game.getWhite().getId()))
+                    game.doRandomMove();
+
+                MainPanel panel = new MainPanel(game);
+
+                InputStream is = panel.getImageStream();
+
+                MessageCreateFields.File f = MessageCreateFields.File.of("game.png", panel.getImageStream());
+
+                Mono<Void> replyWithImage = event.reply(InteractionApplicationCommandCallbackSpec.builder()
+                        .files(List.of(f))
+                        .addEmbed(mainEmbed(game))
+                        .build());
+
+                Mono<Void> startThread = event.getReply().flatMap(r -> {
+                    game.setMessage(r);
+                    return r.startThread(StartThreadSpec.builder()
+                                    .name(gameName)
+                                    .autoArchiveDuration(ThreadChannel.AutoArchiveDuration.DURATION2)
+                                    .build())
+                            .flatMap(t -> {
+                                activeGames.put(t.getId(), game);
+                                return Mono.empty();
+                            }).then();
+                });
+
+                return replyWithImage.then(startThread);
+            }
+            return Mono.empty();
+        }).then();
+    }
+
+
+
+    private static Mono<Void> messageHandler(GatewayDiscordClient gateway) {
+        return gateway.on(MessageCreateEvent.class, event -> {
             User user = event.getMessage().getAuthor().get();
-
             return event.getMessage().getChannel()
                     .filter(c -> c instanceof ThreadChannel)
                     .filter(c -> activeGames.containsKey(c.getId()))
@@ -93,91 +182,16 @@ public class ChessGateway {
                                 }
                                 game.doRandomMove();
                                 game.getMessage().edit()
-                                    .withFiles(MessageCreateFields.File.of("game.png", panel.getImageStream()))
-                                    .withEmbeds(mainEmbed(game).withColor(turnColor(game)))
-                                    .withAttachments()
-                                    .block();
+                                        .withFiles(MessageCreateFields.File.of("game.png", panel.getImageStream()))
+                                        .withEmbeds(mainEmbed(game).withColor(turnColor(game)))
+                                        .withAttachments()
+                                        .block();
                             }
                         });
 
                         return userEdit.then(botEdit);
                     });
         }).then();
-        return createCommands.and(onCommand).and(onThreadMessage);
-    }
-
-    private static Mono<Void> commandHandler(GatewayDiscordClient gateway, ChatInputInteractionEvent event) {
-        if (event.getCommandName().equals("resign")) {
-            return event.getInteraction().getChannel()
-                    .ofType(ThreadChannel.class)
-                    .flatMap(t -> {
-                        if (activeGames.containsKey(t.getId())) {
-                            DiscordChessGame game = activeGames.get(t.getId());
-                            if (game.getWhite().getId().equals(event.getInteraction().getUser().getId())
-                            || game.getBlack().getId().equals(event.getInteraction().getUser().getId())) {
-                                activeGames.remove(t.getId());
-                                return t.delete();
-                            }
-                        }
-                       return Mono.empty();
-                    });
-        } else if (event.getCommandName().equals("chess")) {
-            User user1 = event.getOption("user").get().getValue().get().asUser().block();
-            User user2 = event.getInteraction().getUser();
-
-            if (user1.getId().equals(user2.getId())) {
-                return event.reply(InteractionApplicationCommandCallbackSpec.builder()
-                        .ephemeral(true)
-                        .content("You cannot challenge yourself")
-                        .build());
-            }
-
-            if (activeGames.values().stream().anyMatch(game -> game.getWhite().getId().equals(user1.getId()) && game.getBlack().getId().equals(user2.getId())
-                    || game.getWhite().getId().equals(user2.getId()) && game.getBlack().getId().equals(user1.getId()))) {
-                return event.reply(InteractionApplicationCommandCallbackSpec.builder()
-                        .ephemeral(true)
-                        .content("You already have a game against that user")
-                        .build());
-            }
-
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-
-            DiscordChessGame game = new DiscordChessGame(user1, user2);
-
-            String fullName1 =  game.getWhite().getUsername() + "#" + game.getWhite().getDiscriminator();
-            String fullName2 = game.getBlack().getUsername() + "#" + game.getBlack().getDiscriminator();
-
-            String gameName = fullName1 + " vs. " + fullName2 + " on " + dtf.format(LocalDateTime.now());
-
-            if (gateway.getSelfId().equals(game.getWhite().getId()))
-                game.doRandomMove();
-
-            MainPanel panel = new MainPanel(game);
-
-            InputStream is = panel.getImageStream();
-
-            MessageCreateFields.File f = MessageCreateFields.File.of("game.png", panel.getImageStream());
-
-            Mono<Void> replyWithImage = event.reply(InteractionApplicationCommandCallbackSpec.builder()
-                    .files(List.of(f))
-                    .addEmbed(mainEmbed(game))
-                    .build());
-
-            Mono<Void> startThread = event.getReply().flatMap(r -> {
-                game.setMessage(r);
-                return r.startThread(StartThreadSpec.builder()
-                                .name(gameName)
-                                .autoArchiveDuration(ThreadChannel.AutoArchiveDuration.DURATION2)
-                                .build())
-                        .flatMap(t -> {
-                            activeGames.put(t.getId(), game);
-                            return Mono.empty();
-                        }).then();
-            });
-
-            return replyWithImage.then(startThread);
-        }
-        return Mono.empty();
     }
 
     private static EmbedCreateSpec mainEmbed(DiscordChessGame game) {
