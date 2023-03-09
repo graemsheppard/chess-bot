@@ -1,6 +1,10 @@
 package com.graemsheppard.chessbot.pieces;
 
-import com.graemsheppard.chessbot.*;
+import com.graemsheppard.chessbot.Board;
+import com.graemsheppard.chessbot.Location;
+import com.graemsheppard.chessbot.Move;
+import com.graemsheppard.chessbot.enums.Color;
+import com.graemsheppard.chessbot.enums.MoveType;
 
 import java.util.ArrayList;
 import java.util.List;

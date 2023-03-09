@@ -1,10 +1,9 @@
 package com.graemsheppard.chessbot.ui;
 
-import com.graemsheppard.chessbot.Board;
 import com.graemsheppard.chessbot.ChessGame;
 
 import javax.swing.*;
-import java.awt.Color;
+import java.awt.*;
 
 public class Frame extends JFrame {
     public Frame(ChessGame game) {

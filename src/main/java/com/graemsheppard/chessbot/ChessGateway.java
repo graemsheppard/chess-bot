@@ -11,7 +11,10 @@ import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.ThreadChannel;
-import discord4j.core.spec.*;
+import discord4j.core.spec.EmbedCreateSpec;
+import discord4j.core.spec.InteractionApplicationCommandCallbackSpec;
+import discord4j.core.spec.MessageCreateFields;
+import discord4j.core.spec.StartThreadSpec;
 import discord4j.discordjson.json.ApplicationCommandOptionData;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.rest.util.Color;
@@ -190,6 +193,6 @@ public class ChessGateway {
     }
 
     private static Color turnColor(DiscordChessGame game) {
-        return game.getTurn() == com.graemsheppard.chessbot.Color.BLACK ? Color.BLACK : Color.WHITE;
+        return game.getTurn() == com.graemsheppard.chessbot.enums.Color.BLACK ? Color.BLACK : Color.WHITE;
     }
 }

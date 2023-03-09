@@ -1,5 +1,7 @@
 package com.graemsheppard.chessbot;
 
+import com.graemsheppard.chessbot.enums.Color;
+import com.graemsheppard.chessbot.enums.MoveType;
 import com.graemsheppard.chessbot.pieces.*;
 import lombok.Getter;
 import lombok.Setter;

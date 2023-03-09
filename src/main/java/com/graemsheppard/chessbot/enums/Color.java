@@ -1,4 +1,4 @@
-package com.graemsheppard.chessbot;
+package com.graemsheppard.chessbot.enums;
 
 public enum Color {
     WHITE,

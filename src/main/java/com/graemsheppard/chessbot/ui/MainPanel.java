@@ -1,6 +1,5 @@
 package com.graemsheppard.chessbot.ui;
 
-import com.graemsheppard.chessbot.Board;
 import com.graemsheppard.chessbot.ChessGame;
 
 import javax.imageio.ImageIO;

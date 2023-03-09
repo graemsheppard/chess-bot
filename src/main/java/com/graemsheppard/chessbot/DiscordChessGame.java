@@ -1,5 +1,6 @@
 package com.graemsheppard.chessbot;
 
+import com.graemsheppard.chessbot.enums.Color;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import lombok.Getter;

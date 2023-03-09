@@ -1,9 +1,9 @@
 package com.graemsheppard.chessbot.pieces;
 
 import com.graemsheppard.chessbot.Board;
-import com.graemsheppard.chessbot.Color;
 import com.graemsheppard.chessbot.Location;
 import com.graemsheppard.chessbot.Move;
+import com.graemsheppard.chessbot.enums.Color;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,9 +29,6 @@ public abstract class Piece {
     @Getter
     protected String imgPath;
 
-    @Getter
-    @Setter
-    protected boolean alive = true;
     @Getter
     @Setter
     protected Location location = null;
