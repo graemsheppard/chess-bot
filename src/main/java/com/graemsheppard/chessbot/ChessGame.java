@@ -63,7 +63,7 @@ public class ChessGame {
             lastMoveStart = move.getPiece().getLocation().addFiles(0);
             lastMoveEnd = move.getDestination().addFiles(0);
             board.move(move);
-            turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+            nextTurn();
             return true;
         }
 
@@ -86,6 +86,7 @@ public class ChessGame {
                     lastMoveEnd = move.getDestination().addFiles(0);
                     board.move(move);
                     nextTurn();
+                    return true;
                 }
 
             }
@@ -103,6 +104,7 @@ public class ChessGame {
                     lastMoveEnd = move.getDestination().addFiles(0);
                     board.move(move);
                     nextTurn();
+                    return true;
                 }
             }
         }

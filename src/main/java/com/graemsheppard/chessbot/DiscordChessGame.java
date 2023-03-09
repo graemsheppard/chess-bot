@@ -3,8 +3,12 @@ package com.graemsheppard.chessbot;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import com.graemsheppard.chessbot.enums.Color;
+import discord4j.core.object.entity.channel.ThreadChannel;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.List;
+import java.util.stream.Stream;
 
 public class DiscordChessGame extends ChessGame {
 
@@ -15,6 +19,10 @@ public class DiscordChessGame extends ChessGame {
     @Getter
     @Setter
     private Message message;
+
+    @Getter
+    @Setter
+    private ThreadChannel thread;
 
     public DiscordChessGame(User white, User black) {
         this.white = white;
@@ -27,5 +35,9 @@ public class DiscordChessGame extends ChessGame {
         else
             return this.black;
 
+    }
+
+    public Stream<User> getUsers() {
+        return Stream.of(white, black);
     }
 }
