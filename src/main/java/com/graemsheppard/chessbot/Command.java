@@ -149,8 +149,6 @@ public class Command {
             if (lastChar == 'x') {
                 moveType = MoveType.ATTACK;
                 command = command.substring(0, command.length() - 1);
-            } else {
-                return;
             }
         }
 
