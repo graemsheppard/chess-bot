@@ -238,10 +238,12 @@ public class ChessGateway {
     private static EmbedCreateSpec mainEmbed(DiscordChessGame game) {
         String fullName1 =  game.getWhite().getUsername() + "#" + game.getWhite().getDiscriminator();
         String fullName2 = game.getBlack().getUsername() + "#" + game.getBlack().getDiscriminator();
+        User winner = game.getWinnerAsUser();
+        String title = winner == null ? "Chess Match Started" : "Winner: " + winner.getUsername();
         return EmbedCreateSpec.builder()
                 .image("attachment://game.png")
                 .color(turnColor(game))
-                .title("Chess Match Started")
+                .title(title)
                 .addField(":white_medium_square: White ", fullName1, true)
                 .addField(":black_medium_square: Black ", fullName2, true)
                 .build();

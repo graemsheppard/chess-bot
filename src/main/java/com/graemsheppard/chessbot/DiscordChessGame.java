@@ -40,4 +40,13 @@ public class DiscordChessGame extends ChessGame {
     public Stream<User> getUsers() {
         return Stream.of(white, black);
     }
+
+    public User getWinnerAsUser() {
+        if (getWinner() == null)
+            return null;
+        if (getWinner() == Color.WHITE)
+            return white;
+        else
+            return black;
+    }
 }

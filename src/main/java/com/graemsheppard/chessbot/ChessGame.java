@@ -7,6 +7,7 @@ import com.graemsheppard.chessbot.pieces.King;
 import com.graemsheppard.chessbot.pieces.Piece;
 import com.graemsheppard.chessbot.pieces.Rook;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 import java.util.Random;
@@ -19,6 +20,9 @@ public class ChessGame {
     @Getter
     private Color turn = Color.WHITE;
 
+    @Getter
+    private Color winner;
+
     public ChessGame() {
         this.board = new Board();
     }
@@ -26,7 +30,15 @@ public class ChessGame {
     @Getter
     private Location lastMoveStart;
 
-    @Getter Location lastMoveEnd;
+    @Getter
+    private Location lastMoveEnd;
+
+    @Getter
+    @Setter
+    private WinHandler winHandler;
+
+    @Getter
+    private boolean inProgress = true;
 
     /**
      * Takes a chess command and returns true and switches turns if the move was made successfully,
@@ -34,6 +46,9 @@ public class ChessGame {
      * @param command A string in FIDE algebraic chess notation
      */
     public boolean move(String command) {
+
+        if (inProgress)
+            return false;
 
         Command parsed = new Command(command);
         if (!parsed.isValid())
@@ -64,6 +79,7 @@ public class ChessGame {
             lastMoveEnd = move.getDestination().addFiles(0);
             board.move(move);
             nextTurn();
+            checkWinner(turn);
             return true;
         }
 
@@ -86,6 +102,7 @@ public class ChessGame {
                     lastMoveEnd = move.getDestination().addFiles(0);
                     board.move(move);
                     nextTurn();
+                    checkWinner(turn);
                     return true;
                 }
 
@@ -104,6 +121,7 @@ public class ChessGame {
                     lastMoveEnd = move.getDestination().addFiles(0);
                     board.move(move);
                     nextTurn();
+                    checkWinner(turn);
                     return true;
                 }
             }
@@ -152,7 +170,8 @@ public class ChessGame {
                         Move rookMove = new Move(rook, loc1, MoveType.MOVE);
                         board.move(kingMove);
                         board.move(rookMove);
-                        turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+                        nextTurn();
+                        checkWinner(turn);
                         return true;
                     }
                 }
@@ -168,7 +187,8 @@ public class ChessGame {
                         Move rookMove = new Move(rook, loc1, MoveType.MOVE);
                         board.move(kingMove);
                         board.move(rookMove);
-                        turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+                        nextTurn();
+                        checkWinner(turn);
                         return true;
                     }
                 }
@@ -177,7 +197,34 @@ public class ChessGame {
         return false;
     }
 
+    /**
+     *
+     * @param color The color to check if is checkmate
+     */
+    public void checkWinner(Color color) {
+        List<Move> moveList = this.board.getPieces()
+                .filter(p -> p.getColor() == this.turn)
+                .flatMap(p -> p.getValidMoves(board).stream())
+                .filter(m -> m.isSafe(board))
+                .toList();
+
+        // No valid moves, check for win or draw
+        if (moveList.size() == 0) {
+            if (board.kingInCheck(color)) {
+                winner = color == Color.WHITE ? Color.BLACK : Color.WHITE;
+                winHandler.handle(winner);
+            } else {
+                winHandler.handle(winner);
+            }
+            inProgress = false;
+        }
+    }
+
     public void doRandomMove() {
+
+        if (inProgress)
+            return;
+
         List<Move> moveList = this.board.getPieces()
                 .filter(p -> p.getColor() == this.turn)
                 .flatMap(p -> p.getValidMoves(board).stream())
@@ -192,6 +239,10 @@ public class ChessGame {
             board.move(move);
             turn = this.turn == Color.WHITE ? Color.BLACK : Color.WHITE;
         }
+    }
+
+    public interface WinHandler {
+        void handle(Color winner);
     }
 
 }
