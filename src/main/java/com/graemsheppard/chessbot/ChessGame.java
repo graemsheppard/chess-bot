@@ -47,7 +47,7 @@ public class ChessGame {
      */
     public boolean move(String command) {
 
-        if (inProgress)
+        if (!inProgress)
             return false;
 
         Command parsed = new Command(command);
