@@ -72,7 +72,7 @@ public class ChessGame {
             return false;
 
         // One valid move, does not need disambiguation
-        if (moveList.size() == 1) {
+        if (moveList.size() == 1 && parsed.getRank() == 0 && parsed.getFile() == 0) {
             Move move = moveList.get(0);
             move.setPromotionType(parsed.getPromotionType());
             lastMoveStart = move.getPiece().getLocation().addFiles(0);
