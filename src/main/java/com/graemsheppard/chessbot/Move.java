@@ -19,6 +19,9 @@ public class Move {
     private final MoveType moveType;
 
     @Getter
+    private MoveHandler handler;
+
+    @Getter
     @Setter
     private Class<? extends Piece> promotionType;
 
@@ -26,6 +29,11 @@ public class Move {
         this.piece = piece;
         this.destination = destination;
         this.moveType = moveType;
+    }
+
+    public Move (Piece piece, Location destination, MoveType moveType, MoveHandler handler) {
+        this(piece, destination, moveType);
+        this.handler = handler;
     }
 
     /**
@@ -184,6 +192,13 @@ public class Move {
         }
 
         return true;
+    }
+
+    /**
+     * A handler called by Board after the piece is moved
+     */
+    public interface MoveHandler {
+        void handle();
     }
 
 }

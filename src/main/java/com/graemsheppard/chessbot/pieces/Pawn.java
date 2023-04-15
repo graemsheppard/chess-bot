@@ -13,6 +13,8 @@ public class Pawn extends Piece {
 
     private final int direction;
 
+    private int passantMove;
+
     public Pawn(Color color, Location location) {
         super(color, location);
         this.direction = this.color == Color.WHITE ? 1 : -1;
@@ -31,7 +33,9 @@ public class Pawn extends Piece {
             if (!this.isMoved()) {
                 Location newLocation2 = this.location.addRanks(2 * direction);
                 if (newLocation2.isValid() && board.getBoardAt(newLocation2) == null) {
-                    possibleMoves.add(new Move(this, newLocation2, MoveType.MOVE));
+                    possibleMoves.add(new Move(this, newLocation2, MoveType.MOVE, () -> {
+                        this.passantMove = board.getMoveCount() + 1;
+                    }));
                 }
             }
         }
@@ -42,6 +46,24 @@ public class Pawn extends Piece {
         Location newLocation4 = this.location.addRanks(direction).addFiles(1);
         if (newLocation4.isValid() && board.getBoardAt(newLocation4) != null && board.getBoardAt(newLocation4).getColor() != this.getColor())
             possibleMoves.add(new Move(this, newLocation4, MoveType.ATTACK));
+
+        // Handle en passant moves
+        if (this.location.getRank() == '5' && this.getColor() == Color.WHITE
+        ||  this.location.getRank() == '4' && this.getColor() == Color.BLACK) {
+            Location leftPawnLoc = newLocation3.addRanks(-direction);
+            Location rightPawnLoc = newLocation4.addRanks(-direction);
+            if (board.getBoardAt(leftPawnLoc) instanceof Pawn leftPawn) {
+                if (newLocation3.isValid() && leftPawn.getColor() != this.getColor() && leftPawn.passantMove == board.getMoveCount()) {
+                    possibleMoves.add(new Move(this, newLocation3, MoveType.ATTACK, () -> { board.setBoardAt(leftPawnLoc, null); }));
+                }
+            }
+
+            if (board.getBoardAt(rightPawnLoc) instanceof Pawn rightPawn) {
+                if (newLocation4.isValid() && rightPawn.getColor() != this.getColor() && rightPawn.passantMove == board.getMoveCount()) {
+                    possibleMoves.add(new Move(this, newLocation4, MoveType.ATTACK, () -> { board.setBoardAt(rightPawnLoc, null); }));
+                }
+            }
+        }
 
         return possibleMoves;
     }

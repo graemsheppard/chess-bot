@@ -20,6 +20,9 @@ public class Board {
     @Getter
     private final King bKing;
 
+    @Getter
+    private int moveCount = 0;
+
     public Board() {
         grid = new Piece[8][8];
 
@@ -108,7 +111,11 @@ public class Board {
         }
         setBoardAt(piece.getLocation(), null);
         piece.move(move.getDestination());
+        if (move.getHandler() != null) {
+            move.getHandler().handle();
+        }
         setOnBoard(piece);
+        moveCount++;
     }
 
     /**

@@ -121,7 +121,8 @@ public class Command {
         }
 
         // The last two characters now should be the location
-        Location location = new Location(command.substring(command.length() - 2));
+        String locString = command.substring(command.length() - 2);
+        Location location = new Location(locString);
 
         if (!location.isValid()) {
             return;
