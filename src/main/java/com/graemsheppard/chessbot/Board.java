@@ -126,9 +126,14 @@ public class Board {
         return this.getPieces()
                 .filter(p -> p.getColor() != color)
                 .flatMap(p -> p.getAttackingTiles(this).stream())
+                .distinct()
                 .toList();
     }
 
+    /**
+     * @param color The color of the king that may be in check
+     * @return true if the king of the specified color is in check
+     */
     public boolean kingInCheck(Color color) {
         King king = color == Color.WHITE ? wKing : bKing;
         return this.getUnsafeTiles(color)

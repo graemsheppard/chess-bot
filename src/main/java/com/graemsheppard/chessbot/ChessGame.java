@@ -4,6 +4,7 @@ import com.graemsheppard.chessbot.enums.Castle;
 import com.graemsheppard.chessbot.enums.Color;
 import com.graemsheppard.chessbot.enums.MoveType;
 import com.graemsheppard.chessbot.pieces.King;
+import com.graemsheppard.chessbot.pieces.Pawn;
 import com.graemsheppard.chessbot.pieces.Piece;
 import com.graemsheppard.chessbot.pieces.Rook;
 import lombok.Getter;
@@ -72,7 +73,7 @@ public class ChessGame {
             return false;
 
         // One valid move, does not need disambiguation
-        if (moveList.size() == 1 && parsed.getRank() == 0 && parsed.getFile() == 0) {
+        if (moveList.size() == 1 && (parsed.getRank() == 0 && parsed.getFile() == 0 || parsed.getPieceType() == Pawn.class && parsed.getMoveType() == MoveType.ATTACK)) {
             Move move = moveList.get(0);
             move.setPromotionType(parsed.getPromotionType());
             lastMoveStart = move.getPiece().getLocation().addFiles(0);
@@ -175,7 +176,7 @@ public class ChessGame {
                         return true;
                     }
                 }
-            } else if (side == Castle.QUEENSIDE) {
+            } else {
                 Location loc1 = new Location('d', rank);
                 Location loc2 = new Location('c', rank);
                 Location loc3 = new Location('b', rank);

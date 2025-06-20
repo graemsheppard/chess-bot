@@ -50,10 +50,12 @@ public class Bishop extends Piece {
                 Location newLocation = this.location.addRanks(i).addFiles(j);
                 while(newLocation.isValid()) {
                     Piece piece = board.getBoardAt(newLocation);
-                    possibleLocations.add(newLocation);
                     if (piece != null) {
+                        if (piece.getColor() != this.color)
+                            possibleLocations.add(newLocation);
                         break;
                     }
+                    possibleLocations.add(newLocation);
                     newLocation = newLocation.addRanks(i).addFiles(j);
                 }
             }

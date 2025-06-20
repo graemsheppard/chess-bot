@@ -150,7 +150,7 @@ public class ChessGateway {
 
             Mono<Void> startThread = event.getReply().flatMap(r -> {
                 game.setMessage(r);
-                return r.startThread(StartThreadSpec.builder()
+                return r.startThread(StartThreadFromMessageSpec.builder()
                                 .name(gameName)
                                 .autoArchiveDuration(ThreadChannel.AutoArchiveDuration.DURATION2)
                                 .build())

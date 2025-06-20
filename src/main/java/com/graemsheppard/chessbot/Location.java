@@ -50,4 +50,9 @@ public class Location {
         return false;
     }
 
+    @Override
+    public int hashCode() {
+        return this.file + 2 * this.rank;
+    }
+
 }

@@ -49,7 +49,7 @@ public class Command {
 
         moveType = MoveType.MOVE;
 
-        if (command.length() < 2) {
+        if (command.length() < 2 || command.charAt(0) == 'x') {
             return;
         }
 

@@ -57,7 +57,9 @@ public class Knight extends Piece {
                     else
                         newLocation = this.location.addRanks(j).addFiles(i);
                     if (newLocation.isValid()) {
-                        possibleLocations.add(newLocation);
+                        Piece piece = board.getBoardAt(newLocation);
+                        if (piece == null || piece.getColor() != this.color)
+                            possibleLocations.add(newLocation);
                     }
                 }
             }
