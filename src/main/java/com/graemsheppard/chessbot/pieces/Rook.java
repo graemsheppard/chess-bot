@@ -63,9 +63,12 @@ public class Rook extends Piece {
                 while(newLocation.isValid()) {
                     Piece piece = board.getBoardAt(newLocation);
                     possibleLocations.add(newLocation);
-                    if (piece != null) {
+
+                    // Go no further once a piece is reached unless it is an enemy king
+                    if (piece != null && (piece.getCharacter() != 'K' || piece.getColor() == this.color)) {
                         break;
                     }
+
                     if (k == 0)
                         newLocation = newLocation.addRanks(i);
                     else

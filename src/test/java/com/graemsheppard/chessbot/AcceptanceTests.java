@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AcceptanceTests {
 
     @ParameterizedTest
-    @ValueSource(strings = { "blackWinsCheckmate1.pgn", "blackWinsCheckmate2.pgn", "whiteWinsCheckmate1.pgn" })
+    @ValueSource(strings = { "blackWinsCheckmate1.pgn", "blackWinsCheckmate2.pgn", "blackWinsCheckmate3.pgn", "whiteWinsCheckmate1.pgn" })
     public void fullGameEndsWithCheckmate(String filename) {
         ChessGame game = new ChessGame();
         var gameResult = TestUtils.getGameResult(filename);

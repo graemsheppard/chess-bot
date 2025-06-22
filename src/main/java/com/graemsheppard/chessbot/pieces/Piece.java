@@ -41,8 +41,17 @@ public abstract class Piece {
         this.moved = true;
         this.location = location;
     }
+
+    /**
+     * @return All possible moves that can be made by this piece.
+     */
     public abstract List<Move> getValidMoves(Board board);
 
+    /**
+     * @return The list of locations under attack by this piece. Includes locations that are occupied by the same color
+     * (defended) and pieces that are occupied by the opposite color (attacked). Queens, Rooks, and Bishops "see through"
+     * opposite colored Kings.
+     */
     public abstract List<Location> getAttackingTiles(Board board);
 
 
