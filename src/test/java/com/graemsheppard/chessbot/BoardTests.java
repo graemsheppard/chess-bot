@@ -106,8 +106,8 @@ public class BoardTests {
         var unsafeTilesWhite = board.getUnsafeTiles(Color.WHITE);
         var unsafeTilesBlack = board.getUnsafeTiles(Color.BLACK);
 
-        assertEquals(unsafeTilesWhite.size(), 8);
-        assertEquals(unsafeTilesBlack.size(), 8);
+        assertEquals(22, unsafeTilesWhite.size());
+        assertEquals(22, unsafeTilesBlack.size());
     }
 
     @Test
@@ -121,8 +121,8 @@ public class BoardTests {
         var unsafeTilesWhite = board.getUnsafeTiles(Color.WHITE);
         var unsafeTilesBlack = board.getUnsafeTiles(Color.BLACK);
 
-        assertEquals(unsafeTilesWhite.size(), 16);
-        assertEquals(unsafeTilesBlack.size(), 14);
+        assertEquals(29, unsafeTilesWhite.size());
+        assertEquals(28, unsafeTilesBlack.size());
     }
 
     @Test

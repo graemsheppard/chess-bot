@@ -211,12 +211,12 @@ public class ChessGame {
 
         // No valid moves, check for win or draw
         if (moveList.size() == 0) {
-            if (board.kingInCheck(color)) {
+            if (board.kingInCheck(color))
                 winner = color == Color.WHITE ? Color.BLACK : Color.WHITE;
+
+            if (winHandler != null)
                 winHandler.handle(winner);
-            } else {
-                winHandler.handle(winner);
-            }
+
             inProgress = false;
         }
     }

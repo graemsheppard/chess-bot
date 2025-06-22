@@ -65,7 +65,8 @@ public class Move {
             if (location.isValid())  {
                 Piece piece = board.getBoardAt(location);
                 if (!piece.getLocation().equals(this.getDestination()))
-                    if (piece.getColor() != king.getColor() && (piece instanceof Queen || piece instanceof Rook))
+                    if (piece.getColor() != king.getColor() && (piece instanceof Queen || piece instanceof Rook)
+                        && this.getDestination().getRank() != piece.getLocation().getRank())
                         return false;
             }
         }
@@ -81,7 +82,8 @@ public class Move {
             if (location.isValid())  {
                 Piece piece = board.getBoardAt(location);
                 if (!piece.getLocation().equals(this.getDestination()))
-                    if (piece.getColor() != king.getColor() && (piece instanceof Queen || piece instanceof Rook))
+                    if (piece.getColor() != king.getColor() && (piece instanceof Queen || piece instanceof Rook)
+                        && this.getDestination().getFile() != piece.getLocation().getFile())
                         return false;
             }
         }
@@ -121,8 +123,8 @@ public class Move {
             Location pLoc1 = king.getLocation().addRanks(pawnDir).addFiles(-1);
             Location pLoc2 = king.getLocation().addRanks(pawnDir).addFiles(1);
 
-            Piece piece1 = board.getBoardAt(pLoc1);
-            Piece piece2 = board.getBoardAt(pLoc2);
+            Piece piece1 = pLoc1.isValid() ? board.getBoardAt(pLoc1): null;
+            Piece piece2 = pLoc2.isValid() ? board.getBoardAt(pLoc2) : null;
 
             // A pawn is checking on lower file
             if (piece1 instanceof Pawn && piece1.getColor() != king.getColor()) {

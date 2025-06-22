@@ -54,13 +54,13 @@ public class Command {
         }
 
         // Check if castling
-        if (command.equals("0-0")) {
+        if (command.equals("O-O")) {
             castleSide = Castle.KINGSIDE;
             valid = true;
             return;
         }
 
-        if (command.equals("0-0-0")) {
+        if (command.equals("O-O-O")) {
             castleSide = Castle.QUEENSIDE;
             valid = true;
             return;

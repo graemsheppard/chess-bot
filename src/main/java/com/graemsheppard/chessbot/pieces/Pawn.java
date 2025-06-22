@@ -53,13 +53,13 @@ public class Pawn extends Piece {
             Location leftPawnLoc = newLocation3.addRanks(-direction);
             Location rightPawnLoc = newLocation4.addRanks(-direction);
             if (leftPawnLoc.isValid() && board.getBoardAt(leftPawnLoc) instanceof Pawn leftPawn) {
-                if (newLocation3.isValid() && leftPawn.getColor() != this.getColor() && leftPawn.passantMove == board.getMoveCount()) {
+                if (newLocation3.isValid() && leftPawn.passantMove == board.getMoveCount()) {
                     possibleMoves.add(new Move(this, newLocation3, MoveType.ATTACK, () -> { board.setBoardAt(leftPawnLoc, null); }));
                 }
             }
 
             if (rightPawnLoc.isValid() && board.getBoardAt(rightPawnLoc) instanceof Pawn rightPawn) {
-                if (newLocation4.isValid() && rightPawn.getColor() != this.getColor() && rightPawn.passantMove == board.getMoveCount()) {
+                if (newLocation4.isValid() && rightPawn.passantMove == board.getMoveCount()) {
                     possibleMoves.add(new Move(this, newLocation4, MoveType.ATTACK, () -> { board.setBoardAt(rightPawnLoc, null); }));
                 }
             }

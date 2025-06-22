@@ -53,9 +53,7 @@ public class King extends Piece {
                 if (i == 0 && j == 0) continue;
                 Location newLocation = this.location.addFiles(i).addRanks(j);
                 if (newLocation.isValid()) {
-                    Piece piece = board.getBoardAt(newLocation);
-                    if (piece == null || piece.getColor() != this.color)
-                        possibleLocations.add(newLocation);
+                    possibleLocations.add(newLocation);
                 }
             }
         }

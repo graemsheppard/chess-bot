@@ -62,12 +62,10 @@ public class Rook extends Piece {
                     newLocation = this.location.addFiles(i);
                 while(newLocation.isValid()) {
                     Piece piece = board.getBoardAt(newLocation);
+                    possibleLocations.add(newLocation);
                     if (piece != null) {
-                        if (piece.getColor() != this.color)
-                            possibleLocations.add(newLocation);
                         break;
                     }
-                    possibleLocations.add(newLocation);
                     if (k == 0)
                         newLocation = newLocation.addRanks(i);
                     else
