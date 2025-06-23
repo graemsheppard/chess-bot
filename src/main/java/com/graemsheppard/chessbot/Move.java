@@ -100,7 +100,7 @@ public class Move {
 
             if (location.isValid()) {
                 Piece piece = board.getBoardAt(location);
-                if (!piece.getLocation().equals(this.getDestination()))
+                if (!piece.getLocation().onSameDiagonal(this.getDestination()))
                     if (piece.getColor() != king.getColor() && (piece instanceof Bishop || piece instanceof Queen))
                         return false;
             }

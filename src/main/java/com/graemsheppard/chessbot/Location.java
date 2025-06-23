@@ -41,6 +41,12 @@ public class Location {
         return new int[] { this.file - 'a', this.rank - '1' };
     }
 
+    public boolean onSameDiagonal(Location other) {
+        var diffX = other.asIndex()[0] - this.asIndex()[0];
+        var diffY = other.asIndex()[1] - this.asIndex()[1];
+        return Math.abs(diffX) == Math.abs(diffY);
+    }
+
     @Override
     public boolean equals(Object object) {
         if (object instanceof Location) {

@@ -12,13 +12,13 @@ import java.util.stream.Stream;
 public class Board {
 
     @Getter
-    protected final Piece[][] grid;
+    protected Piece[][] grid;
 
     @Getter
-    protected final King wKing;
+    protected King wKing;
 
     @Getter
-    protected final King bKing;
+    protected King bKing;
 
     @Getter
     private int moveCount = 0;

@@ -17,9 +17,11 @@ import java.util.Random;
 public class ChessGame {
 
     @Getter
-    private final Board board;
+    @Setter
+    private Board board;
 
     @Getter
+    @Setter
     private Color turn = Color.WHITE;
 
     @Getter
