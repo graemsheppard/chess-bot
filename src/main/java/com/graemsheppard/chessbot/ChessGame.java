@@ -1,5 +1,6 @@
 package com.graemsheppard.chessbot;
 
+import com.graemsheppard.chessbot.Exceptions.InvalidMoveException;
 import com.graemsheppard.chessbot.enums.Castle;
 import com.graemsheppard.chessbot.enums.Color;
 import com.graemsheppard.chessbot.enums.MoveType;
@@ -46,17 +47,16 @@ public class ChessGame {
      * otherwise returns false and does not change turns or update the board.
      * @param command A string in FIDE algebraic chess notation
      */
-    public boolean move(String command) {
+    public void move(String command) throws InvalidMoveException {
 
         if (!inProgress)
-            return false;
+            throw new InvalidMoveException("The game has concluded, you may not make further moves");
 
         Command parsed = new Command(command);
-        if (!parsed.isValid())
-            return false;
 
         if (parsed.getCastleSide() != null) {
-            return castle(parsed.getCastleSide());
+            castle(parsed.getCastleSide());
+            return;
         }
 
         List<Move> moveList = this.board.getPieces()
@@ -70,7 +70,7 @@ public class ChessGame {
 
         // No valid moves
         if (moveList.size() == 0)
-            return false;
+            throw new InvalidMoveException("Invalid move, there is no piece that can make the move: " + command);
 
         // One valid move, does not need disambiguation
         if (moveList.size() == 1 && (parsed.getRank() == 0 && parsed.getFile() == 0 || parsed.getPieceType() == Pawn.class && parsed.getMoveType() == MoveType.ATTACK)) {
@@ -81,7 +81,7 @@ public class ChessGame {
             board.move(move);
             nextTurn();
             checkWinner(turn);
-            return true;
+            return;
         }
 
         // Two valid moves, need to disambiguate the pieces that can move here
@@ -104,7 +104,7 @@ public class ChessGame {
                     board.move(move);
                     nextTurn();
                     checkWinner(turn);
-                    return true;
+                    return;
                 }
 
             }
@@ -123,12 +123,12 @@ public class ChessGame {
                     board.move(move);
                     nextTurn();
                     checkWinner(turn);
-                    return true;
+                    return;
                 }
             }
         }
 
-        return false;
+        throw new InvalidMoveException("The move could not be completed due to an unhandled exception");
     }
 
     /**
@@ -140,9 +140,8 @@ public class ChessGame {
 
     /**
      * @param side The direction we are castling to
-     * @return true if the move was successful
      */
-    public boolean castle(Castle side) {
+    public void castle(Castle side) throws InvalidMoveException {
         Location rookLoc;
         King king = turn == Color.WHITE ? board.getWKing() : board.getBKing();
         char rank = turn == Color.WHITE ? '1' : '8';
@@ -152,50 +151,57 @@ public class ChessGame {
             Piece piece = board.getBoardAt(rookLoc);
             if (piece instanceof Rook)
                 rook = (Rook) piece;
-        } else if (side == Castle.QUEENSIDE) {
+        } else {
             rookLoc = new Location('a', rank);
             Piece piece = board.getBoardAt(rookLoc);
             if (piece instanceof Rook)
                 rook = (Rook) piece;
         }
 
-        if (rook != null && !rook.isMoved() && !king.isMoved()) {
-            if (side == Castle.KINGSIDE) {
-                Location loc1 = new Location('f', rank);
-                Location loc2 = new Location('g', rank);
-                if (board.getBoardAt(loc1) == null && board.getBoardAt(loc2) == null) {
-                    List<Location> dangerTiles = board.getUnsafeTiles(turn);
-                    boolean isPossible = !dangerTiles.stream().anyMatch(l -> l.equals(loc1) || l.equals(loc2) || l.equals(king.getLocation()));
-                    if (isPossible) {
-                        Move kingMove = new Move(king, loc2, MoveType.MOVE);
-                        Move rookMove = new Move(rook, loc1, MoveType.MOVE);
-                        board.move(kingMove);
-                        board.move(rookMove);
-                        nextTurn();
-                        checkWinner(turn);
-                        return true;
-                    }
-                }
-            } else {
-                Location loc1 = new Location('d', rank);
-                Location loc2 = new Location('c', rank);
-                Location loc3 = new Location('b', rank);
-                if (board.getBoardAt(loc1) == null && board.getBoardAt(loc2) == null && board.getBoardAt(loc3) == null) {
-                    List<Location> dangerTiles = board.getUnsafeTiles(turn);
-                    boolean isPossible = !dangerTiles.stream().anyMatch(l -> l.equals(loc1) || l.equals(loc2) || l.equals(king.getLocation()));
-                    if (isPossible) {
-                        Move kingMove = new Move(king, loc2, MoveType.MOVE);
-                        Move rookMove = new Move(rook, loc1, MoveType.MOVE);
-                        board.move(kingMove);
-                        board.move(rookMove);
-                        nextTurn();
-                        checkWinner(turn);
-                        return true;
-                    }
-                }
+        if (rook == null)
+            throw new InvalidMoveException("Cannot castle " + side.toString() + " because there is no rook on " + rookLoc);
+
+        if (rook.isMoved() || king.isMoved())
+            throw new InvalidMoveException("Cannot castle " + side.toString() + " because the rook or king has moved");
+
+        if (side == Castle.KINGSIDE) {
+            Location loc1 = new Location('f', rank);
+            Location loc2 = new Location('g', rank);
+            if (board.getBoardAt(loc1) == null && board.getBoardAt(loc2) == null) {
+                List<Location> dangerTiles = board.getUnsafeTiles(turn);
+                boolean isPossible = dangerTiles.stream().noneMatch(l -> l.equals(loc1) || l.equals(loc2) || l.equals(king.getLocation()));
+                if (!isPossible)
+                    throw new InvalidMoveException("Cannot castle " + side.toString() + " because the king is in check or passes through danger.");
+
+                Move kingMove = new Move(king, loc2, MoveType.MOVE);
+                Move rookMove = new Move(rook, loc1, MoveType.MOVE);
+                board.move(kingMove);
+                board.move(rookMove);
+                nextTurn();
+                checkWinner(turn);
+                return;
+            }
+        } else {
+            Location loc1 = new Location('d', rank);
+            Location loc2 = new Location('c', rank);
+            Location loc3 = new Location('b', rank);
+            if (board.getBoardAt(loc1) == null && board.getBoardAt(loc2) == null && board.getBoardAt(loc3) == null) {
+                List<Location> dangerTiles = board.getUnsafeTiles(turn);
+                boolean isPossible = dangerTiles.stream().noneMatch(l -> l.equals(loc1) || l.equals(loc2) || l.equals(king.getLocation()));
+                if (!isPossible)
+                    throw new InvalidMoveException("Cannot castle " + side.toString() + " because the king is in check or passes through danger.");
+
+                Move kingMove = new Move(king, loc2, MoveType.MOVE);
+                Move rookMove = new Move(rook, loc1, MoveType.MOVE);
+                board.move(kingMove);
+                board.move(rookMove);
+                nextTurn();
+                checkWinner(turn);
+                return;
             }
         }
-        return false;
+
+        throw new InvalidMoveException("Cannot castle for unexpected reason");
     }
 
     /**

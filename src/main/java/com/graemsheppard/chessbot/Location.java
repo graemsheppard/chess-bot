@@ -55,4 +55,9 @@ public class Location {
         return this.file + 2 * this.rank;
     }
 
+    @Override
+    public String toString() {
+        return "" + this.getFile() + this.getRank();
+    }
+
 }

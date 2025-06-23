@@ -1,6 +1,7 @@
 package com.graemsheppard.chessbot;
 
 
+import com.graemsheppard.chessbot.Exceptions.InvalidMoveException;
 import com.graemsheppard.chessbot.ui.MainPanel;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
@@ -204,8 +205,15 @@ public class ChessGateway {
         if (!user.getId().equals(game.getCurrentUser().getId()))
             return event.getMessage().delete();
 
-        else if (!game.move(event.getMessage().getContent()))
-            return event.getMessage().delete();
+        else {
+            try {
+                game.move(event.getMessage().getContent());
+            } catch (InvalidMoveException e) {
+                return event.getMessage().delete();
+                // TODO: return error to user without cluttering the thread
+            }
+        }
+
 
         MainPanel panel = new MainPanel(game);
 
