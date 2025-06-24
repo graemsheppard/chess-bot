@@ -1,6 +1,7 @@
 package com.graemsheppard.chessbot;
 
 import com.graemsheppard.chessbot.enums.Color;
+import com.graemsheppard.chessbot.enums.GameResultType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -24,17 +25,19 @@ public class TestUtils {
         Pattern resultPattern = Pattern.compile("(\\[Result \\\")(.*)(\\\"])");
         List<String> moveList = new ArrayList<>();
         Color winner = null;
+        GameResultType resultType = null;
+        String resultString = null;
 
         try {
             for (String line; (line = bufferedReader.readLine()) != null;) {
                 var matcher = resultPattern.matcher(line);
 
                 if (matcher.matches() && matcher.groupCount() == 3) {
-                    var outcome = matcher.group(2);
-                    if (outcome.equals("1-0"))
-                        winner = Color.WHITE;
-                    else if (outcome.equals("0-1"))
-                        winner = Color.BLACK;
+                    resultString = matcher.group(2);
+                    switch (resultString) {
+                        case "1-0" -> winner = Color.WHITE;
+                        case "0-1" -> winner = Color.BLACK;
+                    }
                 }
 
                 if (line.startsWith("[") || line.length() == 0)
@@ -50,7 +53,17 @@ public class TestUtils {
             throw new RuntimeException(e);
         }
 
-        return new GameResult(filename, winner , moveList);
+        // Check for resign
+        String lastMove = moveList.get(moveList.size() - 1);
+        if (lastMove.endsWith("#")) {
+            resultType = GameResultType.CHECKMATE;
+        } else {
+            // Game ends with resign, add the resignation move
+            moveList.add(resultString);
+            resultType = GameResultType.RESIGNATION;
+        }
+
+        return new GameResult(filename, winner , moveList, resultType);
     }
 
 
@@ -74,6 +87,9 @@ public class TestUtils {
 
         @Getter
         private List<String> moveList;
+
+        @Getter
+        private GameResultType resultType;
 
     }
 }

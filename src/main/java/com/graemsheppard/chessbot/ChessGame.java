@@ -3,6 +3,7 @@ package com.graemsheppard.chessbot;
 import com.graemsheppard.chessbot.Exceptions.InvalidMoveException;
 import com.graemsheppard.chessbot.enums.Castle;
 import com.graemsheppard.chessbot.enums.Color;
+import com.graemsheppard.chessbot.enums.GameResultType;
 import com.graemsheppard.chessbot.enums.MoveType;
 import com.graemsheppard.chessbot.pieces.King;
 import com.graemsheppard.chessbot.pieces.Pawn;
@@ -26,6 +27,9 @@ public class ChessGame {
 
     @Getter
     private Color winner;
+
+    @Getter
+    private GameResultType outcome;
 
     public ChessGame() {
         this.board = new Board();
@@ -55,6 +59,18 @@ public class ChessGame {
             throw new InvalidMoveException("The game has concluded, you may not make further moves");
 
         Command parsed = new Command(command);
+
+        if (parsed.getResignee() != null) {
+            if (parsed.getResignee() == this.turn) {
+                winner = parsed.getResignee() == Color.BLACK ? Color.WHITE : Color.BLACK;
+                outcome = GameResultType.RESIGNATION;
+                inProgress = false;
+                nextTurn();
+                return;
+            } else {
+                throw new InvalidMoveException("You must wait until it is your move to resign");
+            }
+        }
 
         if (parsed.getCastleSide() != null) {
             castle(parsed.getCastleSide());
@@ -219,8 +235,12 @@ public class ChessGame {
 
         // No valid moves, check for win or draw
         if (moveList.size() == 0) {
-            if (board.kingInCheck(color))
+            if (board.kingInCheck(color)) {
                 winner = color == Color.WHITE ? Color.BLACK : Color.WHITE;
+                outcome = GameResultType.CHECKMATE;
+            } else {
+                outcome = GameResultType.DRAW;
+            }
 
             if (winHandler != null)
                 winHandler.handle(winner);

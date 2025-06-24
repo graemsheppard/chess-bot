@@ -2,6 +2,7 @@ package com.graemsheppard.chessbot;
 
 import com.graemsheppard.chessbot.Exceptions.InvalidMoveException;
 import com.graemsheppard.chessbot.enums.Castle;
+import com.graemsheppard.chessbot.enums.Color;
 import com.graemsheppard.chessbot.enums.MoveType;
 import com.graemsheppard.chessbot.pieces.*;
 import lombok.Getter;
@@ -28,6 +29,9 @@ public class Command {
 
     @Getter
     private boolean checkmate;
+
+    @Getter
+    private Color resignee;
 
     @Getter
     private char rank;
@@ -64,6 +68,17 @@ public class Command {
 
         if (command.equals("O-O-O")) {
             castleSide = Castle.QUEENSIDE;
+            return;
+        }
+
+        // Check for resignation
+        if (command.equals("1-0")) {
+            resignee = Color.BLACK;
+            return;
+        }
+
+        if (command.equals("0-1")) {
+            resignee = Color.WHITE;
             return;
         }
 

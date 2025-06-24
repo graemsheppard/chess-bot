@@ -3,14 +3,16 @@ package com.graemsheppard.chessbot;
 import com.graemsheppard.chessbot.Exceptions.InvalidMoveException;
 import com.graemsheppard.chessbot.enums.Color;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.MethodSource;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class AcceptanceTests {
 
     @ParameterizedTest
-    @ValueSource(strings = { "blackWinsCheckmate1.pgn", "blackWinsCheckmate2.pgn", "blackWinsCheckmate3.pgn", "whiteWinsCheckmate1.pgn" })
+    @MethodSource("getValidGames")
     public void fullGameEndsWithCheckmate(String filename) throws InvalidMoveException {
         ChessGame game = new ChessGame();
         var gameResult = TestUtils.getGameResult(filename);
@@ -27,6 +29,18 @@ public class AcceptanceTests {
         }
 
         assertFalse(game.isInProgress());
-        assertEquals(game.getWinner(), gameResult.getWinner());
+        assertEquals(gameResult.getWinner(), game.getWinner());
+        assertEquals(gameResult.getResultType(), game.getOutcome());
+    }
+
+    private static List<String> getValidGames() {
+        return List.of(new String[] {
+                "blackWinsCheckmate1.pgn",
+                "blackWinsCheckmate2.pgn",
+                "blackWinsCheckmate3.pgn",
+                "whiteWinsCheckmate1.pgn" ,
+                "whiteWinsCheckmate2.pgn",
+                "whiteWinsResignation1.pgn"
+        });
     }
 }
