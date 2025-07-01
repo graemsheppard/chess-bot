@@ -22,7 +22,7 @@ public class TestUtils {
         var inputStreamReader = new InputStreamReader(inputStream);
         var bufferedReader = new BufferedReader(inputStreamReader);
 
-        Pattern resultPattern = Pattern.compile("(\\[Result \\\")(.*)(\\\"])");
+        Pattern resultPattern = Pattern.compile("(\\[Result \")(.*)(\"])");
         List<String> moveList = new ArrayList<>();
         Color winner = null;
         GameResultType resultType = null;
@@ -31,12 +31,13 @@ public class TestUtils {
         try {
             for (String line; (line = bufferedReader.readLine()) != null;) {
                 var matcher = resultPattern.matcher(line);
-
+                line = line.replaceAll("(\\{\\[.*?\\]\\})", "");
                 if (matcher.matches() && matcher.groupCount() == 3) {
                     resultString = matcher.group(2);
                     switch (resultString) {
                         case "1-0" -> winner = Color.WHITE;
                         case "0-1" -> winner = Color.BLACK;
+                        case "1/2-1/2" -> resultType = GameResultType.DRAW;
                     }
                 }
 
@@ -44,7 +45,7 @@ public class TestUtils {
                     continue;
                 var words = line.split("\\s+");
                 for (var word : words) {
-                    if (word.matches("\\d+\\.") || word.equals("1/2-1/2") || word.equals("1-0") || word.equals("0-1"))
+                    if (word.matches("\\d+\\.") || word.equals("1/2-1/2") || word.equals("1-0") || word.equals("0-1") || word.matches("\\{.*\\}"))
                         continue;
                     moveList.add(word);
                 }
@@ -57,7 +58,7 @@ public class TestUtils {
         String lastMove = moveList.get(moveList.size() - 1);
         if (lastMove.endsWith("#")) {
             resultType = GameResultType.CHECKMATE;
-        } else {
+        } else if (winner != null) {
             // Game ends with resign, add the resignation move
             moveList.add(resultString);
             resultType = GameResultType.RESIGNATION;

@@ -13,7 +13,7 @@ public class AcceptanceTests {
 
     @ParameterizedTest
     @MethodSource("getValidGames")
-    public void fullGameEndsWithCheckmate(String filename) throws InvalidMoveException {
+    public void fullGamePlayTest(String filename) throws InvalidMoveException {
         ChessGame game = new ChessGame();
         var gameResult = TestUtils.getGameResult(filename);
 
@@ -40,7 +40,9 @@ public class AcceptanceTests {
                 "blackWinsCheckmate3.pgn",
                 "whiteWinsCheckmate1.pgn" ,
                 "whiteWinsCheckmate2.pgn",
-                "whiteWinsResignation1.pgn"
+                "whiteWinsResignation1.pgn",
+                "drawStalemate1.pgn",
+                "draw50MoveRule1.pgn"
         });
     }
 }

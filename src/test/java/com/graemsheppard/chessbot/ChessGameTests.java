@@ -28,14 +28,16 @@ public class ChessGameTests {
         board.setOnBoard(bQueen);
 
         // Cannot move out of pin
-        assertThrows(InvalidMoveException.class, () -> {
+        var ex1 = assertThrows(InvalidMoveException.class, () -> {
             game.move("Bd5");
         });
+        assertEquals(InvalidMoveException.NO_AVAILABLE_PIECE, ex1.getMessage());
 
         // Cannot move out of pin with check
-        assertThrows(InvalidMoveException.class, () -> {
+        var ex2 = assertThrows(InvalidMoveException.class, () -> {
             game.move("Bc6+");
         });
+        assertEquals(InvalidMoveException.NO_AVAILABLE_PIECE, ex2.getMessage());
 
         // Moving the king anywhere behind the bishop is fine
         assertDoesNotThrow(() -> {
@@ -62,14 +64,16 @@ public class ChessGameTests {
         board.setOnBoard(wQueen);
 
         // Cannot move out of pin
-        assertThrows(InvalidMoveException.class, () -> {
+        var ex1 = assertThrows(InvalidMoveException.class, () -> {
             game.move("Qb8");
         });
+        assertEquals(InvalidMoveException.NO_AVAILABLE_PIECE, ex1.getMessage());
 
         // Cannot move out of pin with check
-        assertThrows(InvalidMoveException.class, () -> {
+        var ex2 = assertThrows(InvalidMoveException.class, () -> {
             game.move("Qb8+");
         });
+        assertEquals(InvalidMoveException.NO_AVAILABLE_PIECE, ex2.getMessage());
 
         // Can move within the pin and capture the attacking bishop
         assertDoesNotThrow(() -> {

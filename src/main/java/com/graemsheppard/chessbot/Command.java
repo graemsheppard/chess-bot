@@ -55,10 +55,10 @@ public class Command {
         moveType = MoveType.MOVE;
 
         if (command.length() < 2)
-            throw new InvalidMoveException("Invalid move, at least 2 characters are required");
+            throw new InvalidMoveException(InvalidMoveException.NOT_ENOUGH_CHARACTERS);
 
         if (command.charAt(0) == 'x')
-            throw new InvalidMoveException("Invalid move, an attack cannot start with 'x', it must at least indiate the file of the capturing piece.");
+            throw new InvalidMoveException(InvalidMoveException.CANNOT_START_WITH_X);
 
         // Check if castling
         if (command.equals("O-O")) {
@@ -133,7 +133,7 @@ public class Command {
 
         // Check command length again
         if (command.length() < 2) {
-            throw new InvalidMoveException("Invalid move, the move must at least indicate the destination square.");
+            throw new InvalidMoveException(InvalidMoveException.NO_DESTINATION);
         }
 
         // The last two characters now should be the location
@@ -141,18 +141,18 @@ public class Command {
         Location location = new Location(locString);
 
         if (!location.isValid()) {
-            throw new InvalidMoveException("Invalid move, the destination is outside the bounds of the chess board");
+            throw new InvalidMoveException(InvalidMoveException.INVALID_DESTINATION);
         }
 
         boolean onLastRank = location.getRank() == '1' || location.getRank() == '8';
 
         // Ensure if we are promoting, the piece is eligible to do so
         if (promotionType != null && !onLastRank)
-            throw new InvalidMoveException("Invalid move, the pawn must be on the last rank to promote");
+            throw new InvalidMoveException(InvalidMoveException.PAWN_NOT_ON_LAST_RANK);
 
         // Ensure we are promoting if reaching last rank
         if (isPawn && promotionType == null && onLastRank)
-            throw new InvalidMoveException("Invalid move, pawns must promote when reaching the last rank");
+            throw new InvalidMoveException(InvalidMoveException.PAWN_MUST_PROMOTE);
 
         // Remove location part of command
         command = command.substring(0, command.length() - 2);
@@ -177,13 +177,13 @@ public class Command {
             } else if (lastChar >= 'a' && lastChar <= 'h') {
                 file = lastChar;
             } else {
-                throw new InvalidMoveException("Unexpected character found in command: " + lastChar);
+                throw new InvalidMoveException(InvalidMoveException.INVALID_CHARACTER_SEQUENCE);
             }
             command = command.substring(0, command.length() - 1);
         }
 
         // Should now have no characters left
         if (command.length() != 0)
-            throw new InvalidMoveException("Unexpected character sequence found in command: " + command);
+            throw new InvalidMoveException(InvalidMoveException.INVALID_CHARACTER_SEQUENCE);
     }
 }

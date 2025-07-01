@@ -5,10 +5,7 @@ import com.graemsheppard.chessbot.enums.Castle;
 import com.graemsheppard.chessbot.enums.Color;
 import com.graemsheppard.chessbot.enums.GameResultType;
 import com.graemsheppard.chessbot.enums.MoveType;
-import com.graemsheppard.chessbot.pieces.King;
-import com.graemsheppard.chessbot.pieces.Pawn;
-import com.graemsheppard.chessbot.pieces.Piece;
-import com.graemsheppard.chessbot.pieces.Rook;
+import com.graemsheppard.chessbot.pieces.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,6 +21,10 @@ public class ChessGame {
     @Getter
     @Setter
     private Color turn = Color.WHITE;
+
+    @Getter
+    @Setter
+    private int turnNumber = 1;
 
     @Getter
     private Color winner;
@@ -46,6 +47,10 @@ public class ChessGame {
     private WinHandler winHandler;
 
     @Getter
+    @Setter
+    private int lastNonDrawTurn = 0;
+
+    @Getter
     private boolean inProgress = true;
 
     /**
@@ -56,7 +61,7 @@ public class ChessGame {
     public void move(String command) throws InvalidMoveException {
 
         if (!inProgress)
-            throw new InvalidMoveException("The game has concluded, you may not make further moves");
+            throw new InvalidMoveException(InvalidMoveException.GAME_NOT_IN_PROGRESS);
 
         Command parsed = new Command(command);
 
@@ -68,7 +73,7 @@ public class ChessGame {
                 nextTurn();
                 return;
             } else {
-                throw new InvalidMoveException("You must wait until it is your move to resign");
+                throw new InvalidMoveException(InvalidMoveException.MUST_RESIGN_ON_OWN_TURN);
             }
         }
 
@@ -88,7 +93,7 @@ public class ChessGame {
 
         // No valid moves
         if (moveList.size() == 0)
-            throw new InvalidMoveException("Invalid move, there is no piece that can make the move: " + command);
+            throw new InvalidMoveException(InvalidMoveException.NO_AVAILABLE_PIECE);
 
         // One valid move, does not need disambiguation
         if (moveList.size() == 1 && (parsed.getRank() == 0 && parsed.getFile() == 0 || parsed.getPieceType() == Pawn.class && parsed.getMoveType() == MoveType.ATTACK)) {
@@ -97,6 +102,8 @@ public class ChessGame {
             lastMoveStart = move.getPiece().getLocation().addFiles(0);
             lastMoveEnd = move.getDestination().addFiles(0);
             board.move(move);
+            if (move.getPiece().getCharacter() == 'p' || move.getMoveType() == MoveType.ATTACK)
+                lastNonDrawTurn = turnNumber;
             nextTurn();
             checkWinner(turn);
             return;
@@ -120,6 +127,8 @@ public class ChessGame {
                     lastMoveStart = move.getPiece().getLocation().addFiles(0);
                     lastMoveEnd = move.getDestination().addFiles(0);
                     board.move(move);
+                    if (move.getPiece().getCharacter() == 'p' || move.getMoveType() == MoveType.ATTACK)
+                        lastNonDrawTurn = turnNumber;
                     nextTurn();
                     checkWinner(turn);
                     return;
@@ -138,6 +147,8 @@ public class ChessGame {
                     move.setPromotionType(parsed.getPromotionType());
                     lastMoveStart = move.getPiece().getLocation().addFiles(0);
                     lastMoveEnd = move.getDestination().addFiles(0);
+                    if (move.getPiece().getCharacter() == 'p' || move.getMoveType() == MoveType.ATTACK)
+                        lastNonDrawTurn = turnNumber;
                     board.move(move);
                     nextTurn();
                     checkWinner(turn);
@@ -146,7 +157,7 @@ public class ChessGame {
             }
         }
 
-        throw new InvalidMoveException("The move could not be completed due to an unhandled exception");
+        throw new InvalidMoveException(InvalidMoveException.UNHANDLED);
     }
 
     /**
@@ -154,6 +165,8 @@ public class ChessGame {
      */
     private void nextTurn() {
         turn = turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+        if (turn == Color.WHITE)
+            turnNumber++;
     }
 
     /**
@@ -219,7 +232,7 @@ public class ChessGame {
             }
         }
 
-        throw new InvalidMoveException("Cannot castle for unexpected reason");
+        throw new InvalidMoveException(InvalidMoveException.CASTLE_UNHANDLED);
     }
 
     /**
@@ -233,8 +246,18 @@ public class ChessGame {
                 .filter(m -> m.isSafe(board))
                 .toList();
 
+        // Check for win by 50 move rule or TODO: repetition
+        if (turnNumber - lastNonDrawTurn > 50) {
+            outcome = GameResultType.DRAW;
+
+            if (winHandler != null)
+                winHandler.handle(winner);
+
+            inProgress = false;
+        }
+
         // No valid moves, check for win or draw
-        if (moveList.size() == 0) {
+        if (moveList.size() == 0 || board.getPieces().count() == 2) {
             if (board.kingInCheck(color)) {
                 winner = color == Color.WHITE ? Color.BLACK : Color.WHITE;
                 outcome = GameResultType.CHECKMATE;
@@ -247,11 +270,21 @@ public class ChessGame {
 
             inProgress = false;
         }
+
+        // Check if the game is a draw by insufficient material
+        if (insufficientMaterial(Color.WHITE) && insufficientMaterial(Color.BLACK)) {
+            outcome = GameResultType.DRAW;
+
+            if (winHandler != null)
+                winHandler.handle(winner);
+
+            inProgress = false;
+        }
     }
 
     public void doRandomMove() {
 
-        if (inProgress)
+        if (!inProgress)
             return;
 
         List<Move> moveList = this.board.getPieces()
@@ -265,9 +298,22 @@ public class ChessGame {
         if (move != null) {
             lastMoveStart = move.getPiece().getLocation().addFiles(0);
             lastMoveEnd = move.getDestination().addFiles(0);
+            if ((move.getPiece().getColor() == Color.WHITE && move.getDestination().getRank() == '8' ||
+                    move.getPiece().getColor() == Color.BLACK && move.getDestination().getRank() == '1')
+                && move.getPiece().getCharacter() == 'p')
+                move.setPromotionType(Queen.class);
             board.move(move);
-            turn = this.turn == Color.WHITE ? Color.BLACK : Color.WHITE;
+            nextTurn();
+            checkWinner(turn);
         }
+    }
+
+    // TODO: handle other cases
+    private boolean insufficientMaterial(Color color) {
+        var pieces = board.getPieces().filter(p -> p.getColor() == color);
+        if (pieces.count() == 1)
+            return true;
+        return false;
     }
 
     public interface WinHandler {
