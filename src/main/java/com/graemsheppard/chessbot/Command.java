@@ -61,13 +61,13 @@ public class Command {
             throw new InvalidMoveException(InvalidMoveException.CANNOT_START_WITH_X);
 
         // Check if castling
-        if (command.equals("O-O")) {
-            castleSide = Castle.KINGSIDE;
+        if (command.startsWith("O-O-O")) {
+            castleSide = Castle.QUEENSIDE;
             return;
         }
 
-        if (command.equals("O-O-O")) {
-            castleSide = Castle.QUEENSIDE;
+        if (command.startsWith("O-O")) {
+            castleSide = Castle.KINGSIDE;
             return;
         }
 

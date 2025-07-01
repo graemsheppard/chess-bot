@@ -14,6 +14,7 @@ public class Knight extends Piece {
     public Knight(Color color, Location location) {
         super(color, location);
         this.character = 'N';
+        this.descriptor = color == Color.BLACK ? 'n' : 'N';
         this.codePoint = this.color == Color.BLACK ? '\u265e' : '\u2658';
         this.imgPath = this.color == Color.WHITE ? "wKnight.png" : "bKnight.png";
         this.value = 3;

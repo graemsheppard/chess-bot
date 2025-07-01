@@ -14,6 +14,7 @@ public class King extends Piece {
     public King(Color color, Location location) {
         super(color, location);
         this.character = 'K';
+        this.descriptor = color == Color.BLACK ? 'k' : 'K';
         this. codePoint = this.color == Color.BLACK ? '\u265a' : '\u2654';
         this.imgPath = this.color == Color.WHITE ? "wKing.png" : "bKing.png";
         this.value = Integer.MAX_VALUE;

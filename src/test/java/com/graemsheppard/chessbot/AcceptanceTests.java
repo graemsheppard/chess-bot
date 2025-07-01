@@ -42,7 +42,8 @@ public class AcceptanceTests {
                 "whiteWinsCheckmate2.pgn",
                 "whiteWinsResignation1.pgn",
                 "drawStalemate1.pgn",
-                "draw50MoveRule1.pgn"
+                "draw50MoveRule1.pgn",
+                "drawRepetition1.pgn"
         });
     }
 }

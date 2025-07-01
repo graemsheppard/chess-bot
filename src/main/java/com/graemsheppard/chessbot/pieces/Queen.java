@@ -14,6 +14,7 @@ public class Queen extends Piece {
     public Queen(Color color, Location location) {
         super(color, location);
         this.character = 'Q';
+        this.descriptor = color == Color.BLACK ? 'q' : 'Q';
         this.codePoint = this.color == Color.BLACK ? '\u265b' : '\u2655';
         this.value = 7;
     }

@@ -14,6 +14,7 @@ public class Bishop extends Piece {
     public Bishop(Color color, Location location) {
         super(color, location);
         this.character = 'B';
+        this.descriptor = color == Color.BLACK ? 'b' : 'B';
         this.codePoint = this.color == Color.BLACK ? '\u265d' : '\u2657';
         this.value = 3;
         this.imgPath = this.color == Color.WHITE ? "wBishop.png" : "bBishop.png";

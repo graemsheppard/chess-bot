@@ -14,6 +14,7 @@ public class Rook extends Piece {
     public Rook(Color color, Location location) {
         super(color, location);
         this.character = 'R';
+        this.descriptor = color == Color.BLACK ? 'r' : 'R';
         this.codePoint = this.color == Color.BLACK ? '\u265c' : '\u2656';
         this.imgPath = this.color == Color.WHITE ? "wRook.png" : "bRook.png";
         this.value = 5;

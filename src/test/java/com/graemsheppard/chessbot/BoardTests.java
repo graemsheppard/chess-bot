@@ -140,4 +140,14 @@ public class BoardTests {
         assertFalse(board.kingInCheck(Color.WHITE));
     }
 
+    @Test
+    public void shouldEncodeBoard() {
+        var board = new Board();
+        var encoded = board.getEncoded();
+        var encodedBase64 = board.getEncodedBase64();
+        var encodedHex = board.getEncodedHex();
+
+        var t = 1;
+    }
+
 }

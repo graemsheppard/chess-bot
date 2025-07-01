@@ -36,6 +36,8 @@ public abstract class Piece {
     protected Color color = null;
     @Getter
     protected char character = ' ';
+    @Getter
+    protected char descriptor = ' ';
 
     public void move(Location location) {
         this.moved = true;

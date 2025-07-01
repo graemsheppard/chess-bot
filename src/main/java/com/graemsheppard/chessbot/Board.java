@@ -4,9 +4,7 @@ import com.graemsheppard.chessbot.enums.Color;
 import com.graemsheppard.chessbot.pieces.*;
 import lombok.Getter;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class Board {
@@ -22,6 +20,8 @@ public class Board {
 
     @Getter
     private int moveCount = 0;
+
+    private static final HashMap<Character, Character> encodeMap = getEncodeMap();
 
     public Board() {
         grid = new Piece[8][8];
@@ -138,5 +138,59 @@ public class Board {
         King king = color == Color.WHITE ? wKing : bKing;
         return this.getUnsafeTiles(color)
                 .stream().anyMatch(l -> l.equals(king.getLocation()));
+    }
+
+    /**
+     * Encodes the current position into a 32-byte array
+     * @return A byte array where every 4 bits represents a square and piece
+     */
+    public byte[] getEncoded() {
+        byte[] data = new byte[32];
+        for (int k = 0; k < 64; k += 2) {
+            Piece piece1 = grid[k % 8][k / 8];
+            Piece piece2 = grid[(k + 1) % 8][(k + 1) / 8];
+            char character1 = piece1 != null ? piece1.getDescriptor() : '0';
+            char character2 = piece2 != null ? piece2.getDescriptor() : '0';
+
+            byte value = (byte) ((Character.digit(encodeMap.get(character1), 16) << 4) + (Character.digit(encodeMap.get(character2), 16)));
+            data[k / 2] = value;
+        }
+        return data;
+    }
+
+    /**
+     * Gets the current position encoded as a base64 string
+     */
+    public String getEncodedBase64() {
+        var encoder = Base64.getEncoder();
+        return encoder.encodeToString(getEncoded());
+    }
+
+    public String getEncodedHex() {
+        StringBuilder hexString = new StringBuilder();
+        var bytes = getEncoded();
+        for (byte b : bytes) {
+            hexString.append(String.format("%02x", b));
+        }
+        return hexString.toString();
+    }
+
+
+    private static HashMap<Character, Character> getEncodeMap() {
+        var map = new HashMap<Character, Character>();
+        map.put('0', '0');
+        map.put('p', '1');
+        map.put('n', '2');
+        map.put('b', '3');
+        map.put('r', '4');
+        map.put('q', '5');
+        map.put('k', '6');
+        map.put('P', '7');
+        map.put('N', '8');
+        map.put('B', '9');
+        map.put('R', 'a');
+        map.put('Q', 'b');
+        map.put('K', 'c');
+        return map;
     }
 }

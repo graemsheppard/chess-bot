@@ -9,6 +9,7 @@ import com.graemsheppard.chessbot.pieces.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
@@ -32,10 +33,6 @@ public class ChessGame {
     @Getter
     private GameResultType outcome;
 
-    public ChessGame() {
-        this.board = new Board();
-    }
-
     @Getter
     private Location lastMoveStart;
 
@@ -52,6 +49,14 @@ public class ChessGame {
 
     @Getter
     private boolean inProgress = true;
+
+    @Getter
+    private final HashMap<String, Integer> positionCounts = new HashMap<>();
+
+    public ChessGame() {
+        board = new Board();
+        positionCounts.put(board.getEncodedBase64(), 1);
+    }
 
     /**
      * Takes a chess command and returns true and switches turns if the move was made successfully,
@@ -246,8 +251,13 @@ public class ChessGame {
                 .filter(m -> m.isSafe(board))
                 .toList();
 
-        // Check for win by 50 move rule or TODO: repetition
-        if (turnNumber - lastNonDrawTurn > 50) {
+        var encodedPos = board.getEncodedBase64();
+        var positionCount = positionCounts.get(encodedPos);
+        var newPositionCount = (positionCount == null ? 0 : positionCount) + 1;
+        positionCounts.put(encodedPos, newPositionCount);
+
+        // Check for win by 50 move rule
+        if (turnNumber - lastNonDrawTurn > 50 || newPositionCount > 2) {
             outcome = GameResultType.DRAW;
 
             if (winHandler != null)

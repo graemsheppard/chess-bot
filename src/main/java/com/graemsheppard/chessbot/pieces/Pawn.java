@@ -19,6 +19,7 @@ public class Pawn extends Piece {
         super(color, location);
         this.direction = this.color == Color.WHITE ? 1 : -1;
         this.character = 'p';
+        this.descriptor = color == Color.BLACK ? 'p' : 'P';
         this.codePoint = this.color == Color.BLACK ? '\u265f' : '\u2657';
         this.value = 1;
     }
