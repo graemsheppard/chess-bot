@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 public class DiscordChessGame extends ChessGame {
@@ -24,7 +25,11 @@ public class DiscordChessGame extends ChessGame {
     @Setter
     private ThreadChannel thread;
 
+    @Getter
+    private final UUID gameId;
+
     public DiscordChessGame(User white, User black) {
+        this.gameId = UUID.randomUUID();
         this.white = white;
         this.black = black;
     }
@@ -34,7 +39,6 @@ public class DiscordChessGame extends ChessGame {
             return this.white;
         else
             return this.black;
-
     }
 
     public Stream<User> getUsers() {

@@ -12,6 +12,7 @@ import lombok.Setter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 public class ChessGame {
 
@@ -53,7 +54,10 @@ public class ChessGame {
     @Getter
     private final HashMap<String, Integer> positionCounts = new HashMap<>();
 
+    private final Semaphore moveSemaphore;
+
     public ChessGame() {
+        moveSemaphore = new Semaphore(1);
         board = new Board();
         positionCounts.put(board.getEncodedBase64(), 1);
     }
@@ -68,6 +72,11 @@ public class ChessGame {
         if (!inProgress)
             throw new InvalidMoveException(InvalidMoveException.GAME_NOT_IN_PROGRESS);
 
+        boolean acquired = moveSemaphore.tryAcquire();
+        if (!acquired) {
+            return;
+        }
+
         Command parsed = new Command(command);
 
         if (parsed.getResignee() != null) {
@@ -76,14 +85,17 @@ public class ChessGame {
                 outcome = GameResultType.RESIGNATION;
                 inProgress = false;
                 nextTurn();
+                moveSemaphore.release();
                 return;
             } else {
+                moveSemaphore.release();
                 throw new InvalidMoveException(InvalidMoveException.MUST_RESIGN_ON_OWN_TURN);
             }
         }
 
         if (parsed.getCastleSide() != null) {
             castle(parsed.getCastleSide());
+            moveSemaphore.release();
             return;
         }
 
@@ -97,8 +109,11 @@ public class ChessGame {
                 .toList();
 
         // No valid moves
-        if (moveList.size() == 0)
+        if (moveList.size() == 0) {
+            moveSemaphore.release();
             throw new InvalidMoveException(InvalidMoveException.NO_AVAILABLE_PIECE);
+        }
+
 
         // One valid move, does not need disambiguation
         if (moveList.size() == 1 && (parsed.getRank() == 0 && parsed.getFile() == 0 || parsed.getPieceType() == Pawn.class && parsed.getMoveType() == MoveType.ATTACK)) {
@@ -111,6 +126,7 @@ public class ChessGame {
                 lastNonDrawTurn = turnNumber;
             nextTurn();
             checkWinner(turn);
+            moveSemaphore.release();
             return;
         }
 
@@ -136,6 +152,7 @@ public class ChessGame {
                         lastNonDrawTurn = turnNumber;
                     nextTurn();
                     checkWinner(turn);
+                    moveSemaphore.release();
                     return;
                 }
 
@@ -157,12 +174,27 @@ public class ChessGame {
                     board.move(move);
                     nextTurn();
                     checkWinner(turn);
+                    moveSemaphore.release();
                     return;
                 }
             }
         }
 
+        moveSemaphore.release();
         throw new InvalidMoveException(InvalidMoveException.UNHANDLED);
+    }
+
+    /**
+     * Resigns the game
+     * @param color The color that is resigning
+     */
+    public void resign(Color color) {
+        boolean acquired = moveSemaphore.tryAcquire();
+        if (!acquired)
+            return;
+
+        endGame(color == Color.WHITE ? Color.BLACK : Color.WHITE, GameResultType.RESIGNATION);
+        moveSemaphore.release();
     }
 
     /**
@@ -256,42 +288,47 @@ public class ChessGame {
         var newPositionCount = (positionCount == null ? 0 : positionCount) + 1;
         positionCounts.put(encodedPos, newPositionCount);
 
-        // Check for win by 50 move rule
-        if (turnNumber - lastNonDrawTurn > 50 || newPositionCount > 2) {
-            outcome = GameResultType.DRAW;
-
-            if (winHandler != null)
-                winHandler.handle(winner);
-
-            inProgress = false;
-        }
+        // Check for draw by 50 move rule
+        if (turnNumber - lastNonDrawTurn > 50 || newPositionCount > 2)
+            endGame(null, GameResultType.DRAW);
 
         // No valid moves, check for win or draw
         if (moveList.size() == 0 || board.getPieces().count() == 2) {
+            Color winner = null;
+            GameResultType outcome;
             if (board.kingInCheck(color)) {
                 winner = color == Color.WHITE ? Color.BLACK : Color.WHITE;
                 outcome = GameResultType.CHECKMATE;
             } else {
                 outcome = GameResultType.DRAW;
             }
-
-            if (winHandler != null)
-                winHandler.handle(winner);
-
-            inProgress = false;
+            endGame(winner, outcome);
         }
 
         // Check if the game is a draw by insufficient material
         if (insufficientMaterial(Color.WHITE) && insufficientMaterial(Color.BLACK)) {
-            outcome = GameResultType.DRAW;
-
-            if (winHandler != null)
-                winHandler.handle(winner);
-
-            inProgress = false;
+            endGame(null, GameResultType.DRAW);
         }
     }
 
+    /**
+     * Ends the game with a winner and a result type
+     * @param winner The color of the winning player, null if draw
+     * @param resultType The type of result for the game
+     */
+    private void endGame(Color winner, GameResultType resultType) {
+        this.inProgress = false;
+        this.outcome = resultType;
+        this.winner = winner;
+        if (winHandler != null) {
+            winHandler.handle(winner);
+        }
+    }
+
+    /**
+     * Makes a random move for the current player
+     * This is used for testing and debugging purposes
+     */
     public void doRandomMove() {
 
         if (!inProgress)
@@ -319,11 +356,14 @@ public class ChessGame {
     }
 
     // TODO: handle other cases
+    /**
+     * Checks if the game is a draw by insufficient material
+     * @param color The color to check for insufficient material
+     * @return true if the game is a draw by insufficient material, false otherwise
+     */
     private boolean insufficientMaterial(Color color) {
         var pieces = board.getPieces().filter(p -> p.getColor() == color);
-        if (pieces.count() == 1)
-            return true;
-        return false;
+        return pieces.count() == 1;
     }
 
     public interface WinHandler {

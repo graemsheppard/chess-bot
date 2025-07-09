@@ -5,10 +5,13 @@ import com.graemsheppard.chessbot.Exceptions.InvalidMoveException;
 import com.graemsheppard.chessbot.ui.MainPanel;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.interaction.ButtonInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.command.ApplicationCommand;
 import discord4j.core.object.command.ApplicationCommandOption;
+import discord4j.core.object.component.ActionRow;
+import discord4j.core.object.component.Button;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import discord4j.core.object.entity.channel.ThreadChannel;
@@ -16,14 +19,16 @@ import discord4j.core.spec.*;
 import discord4j.discordjson.json.ApplicationCommandOptionData;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.rest.util.Color;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.reactivestreams.Publisher;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ChessGateway {
@@ -130,8 +135,8 @@ public class ChessGateway {
 
             DiscordChessGame game = new DiscordChessGame(user1, user2);
 
-            String fullName1 =  game.getWhite().getUsername() + "#" + game.getWhite().getDiscriminator();
-            String fullName2 = game.getBlack().getUsername() + "#" + game.getBlack().getDiscriminator();
+            String fullName1 =  game.getWhite().getUsername();
+            String fullName2 = game.getBlack().getUsername();
 
             String gameName = fullName1 + " vs. " + fullName2 + " on " + dtf.format(LocalDateTime.now());
 
@@ -140,15 +145,16 @@ public class ChessGateway {
 
             MainPanel panel = new MainPanel(game);
 
-            InputStream is = panel.getImageStream();
-
             MessageCreateFields.File f = MessageCreateFields.File.of("game.png", panel.getImageStream());
 
+
+            // Create the reply with the image and embed
             Mono<Void> replyWithImage = event.reply(InteractionApplicationCommandCallbackSpec.builder()
                     .files(List.of(f))
                     .addEmbed(mainEmbed(game))
                     .build());
 
+            // Create the thread and adds the buttons to the original message
             Mono<Void> startThread = event.getReply().flatMap(r -> {
                 game.setMessage(r);
                 return r.startThread(StartThreadFromMessageSpec.builder()
@@ -158,8 +164,10 @@ public class ChessGateway {
                         .flatMap(t -> {
                             game.setThread(t);
                             activeGames.put(t.getId(), game);
-                            return Mono.empty();
-                        }).then();
+                            Button btnResign = Button.secondary(getResignButtonId(game), "Resign");
+                            Button btnDraw = Button.secondary("btn-draw", "Draw");
+                            return r.edit().withComponents(ActionRow.of(btnResign, btnDraw)).then();
+                        });
             });
 
             return replyWithImage.then(startThread);
@@ -171,9 +179,10 @@ public class ChessGateway {
         return gateway.on(ChatInputInteractionEvent.class, event ->
                         resignHandler(gateway, event)).then()
                 .and(gateway.on(ChatInputInteractionEvent.class, event ->
-                        chessHandler(gateway, event)).then());
+                        chessHandler(gateway, event)).then())
+                .and(gateway.on(ButtonInteractionEvent.class, event ->
+                        resignButtonHandler(gateway, event)));
     }
-
 
     /**
      * Creates the listener for message create and filters to thread messages where the thread is in activeGames
@@ -214,7 +223,6 @@ public class ChessGateway {
             }
         }
 
-
         MainPanel panel = new MainPanel(game);
 
         Mono<Message> userEdit = game.getMessage().edit()
@@ -243,9 +251,60 @@ public class ChessGateway {
                 .then();
     }
 
+    private static Mono<Void> resignButtonHandler(GatewayDiscordClient gateway, ButtonInteractionEvent event) {
+        ButtonEvent btnEvent = getButtonEventFromButtonId(event.getCustomId());
+        if (btnEvent == null)
+            return Mono.empty();
+
+        if (btnEvent.type == ButtonEventType.RESIGN) {
+            DiscordChessGame game = activeGames.get(btnEvent.gameId);
+            if (game == null)
+                return Mono.empty();
+            Optional<User> user = game.getUsers().filter(u -> u.getId().equals(event.getInteraction().getUser().getId())).findAny();
+            if (user.isEmpty())
+                return Mono.empty();
+            com.graemsheppard.chessbot.enums.Color userColor = game.getWhite().getId().equals(user.get().getId()) ?
+                    com.graemsheppard.chessbot.enums.Color.WHITE :
+                    com.graemsheppard.chessbot.enums.Color.BLACK;
+            game.resign(userColor);
+            return game.getMessage().edit().withEmbeds(mainEmbed(game)).then();
+        }
+
+        return Mono.empty();
+    }
+
+    private enum ButtonEventType {
+        RESIGN,
+        DRAW
+    }
+
+    @AllArgsConstructor
+    private static class ButtonEvent {
+        @Getter
+        private ButtonEventType type;
+
+        @Getter
+        private Snowflake gameId;
+    }
+
+    private static ButtonEvent getButtonEventFromButtonId(String customId) {
+        String[] splitString = customId.split(":");
+        if (splitString.length != 2)
+            return null;
+        ButtonEventType type = splitString[0].equals("resign") ? ButtonEventType.RESIGN :
+                splitString[0].equals("draw") ? ButtonEventType.DRAW : null;
+        if (type == null)
+            return null;
+        return new ButtonEvent(type, Snowflake.of(splitString[1]));
+    }
+
+    private static String getResignButtonId(DiscordChessGame game) {
+        return "resign:" + game.getThread().getId().asString();
+    }
+
     private static EmbedCreateSpec mainEmbed(DiscordChessGame game) {
-        String fullName1 =  game.getWhite().getUsername() + "#" + game.getWhite().getDiscriminator();
-        String fullName2 = game.getBlack().getUsername() + "#" + game.getBlack().getDiscriminator();
+        String fullName1 =  game.getWhite().getUsername();
+        String fullName2 = game.getBlack().getUsername();
         User winner = game.getWinnerAsUser();
         String title = winner == null ? "Chess Match Started" : "Winner: " + winner.getUsername();
         return EmbedCreateSpec.builder()
